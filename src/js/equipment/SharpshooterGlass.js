@@ -1,0 +1,28 @@
+// SharpshooterGlass: 명사수의 안경 - 투사체 크기 및 속도 증가
+import { Equipment } from './Equipment.js';
+
+export class SharpshooterGlass extends Equipment {
+    constructor() {
+        super({
+            name: '명사수의 안경',
+            description: '투사체 크기 +15%',
+            icon: 'G',
+            color: '#26c6da',
+        });
+        this.sizeBonus = 0.15;
+    }
+
+    apply(player) {
+        player.projectileSizeMultiplier += this.sizeBonus;
+    }
+
+    remove(player) {
+        player.projectileSizeMultiplier -= this.sizeBonus;
+    }
+
+    onLevelUp() {
+        this.sizeBonus = 0.15 + (this.level - 1) * 0.10;
+        const percent = Math.round(this.sizeBonus * 100);
+        this.description = `투사체 크기 +${percent}%`;
+    }
+}
