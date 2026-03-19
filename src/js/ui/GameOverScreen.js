@@ -1,5 +1,3 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../data/Constants.js';
-
 export default class GameOverScreen {
     constructor(game) {
         this.game = game;
@@ -12,19 +10,17 @@ export default class GameOverScreen {
         this.blinkTimer = 0;
     }
 
-    render(ctx) {
+    render(ctx, W, H) {
         if (!this.active) return;
 
         this.blinkTimer += 0.02;
 
-        // Dark red tinted overlay
         ctx.fillStyle = 'rgba(40, 0, 0, 0.85)';
-        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.fillRect(0, 0, W, H);
 
-        const centerX = CANVAS_WIDTH / 2;
-        const centerY = CANVAS_HEIGHT / 2;
+        const centerX = W / 2;
+        const centerY = H / 2;
 
-        // GAME OVER title
         ctx.save();
         ctx.shadowColor = '#ff1744';
         ctx.shadowBlur = 15;
@@ -35,7 +31,6 @@ export default class GameOverScreen {
         ctx.fillText('GAME OVER', centerX, centerY - 100);
         ctx.restore();
 
-        // Stats
         const stage = this.game.stage || 1;
         const kills = this.game.killCount || 0;
         const elapsedMs = this.game.elapsedTime || 0;
@@ -50,27 +45,22 @@ export default class GameOverScreen {
         const lineH = 28;
         let y = centerY - 30;
 
-        ctx.fillText(`\uB3C4\uB2EC \uC2A4\uD14C\uC774\uC9C0: ${stage}`, centerX, y);
-        y += lineH;
-        ctx.fillText(`\uCC98\uCE58 \uC218: ${kills}`, centerX, y);
-        y += lineH;
-        ctx.fillText(`\uD50C\uB808\uC774 \uC2DC\uAC04: ${timeStr}`, centerX, y);
-        y += lineH;
-        ctx.fillText(`\uCD5C\uACE0 \uB808\uBCA8: ${playerLevel}`, centerX, y);
+        ctx.fillText(`도달 스테이지: ${stage}`, centerX, y); y += lineH;
+        ctx.fillText(`처치 수: ${kills}`, centerX, y); y += lineH;
+        ctx.fillText(`플레이 시간: ${timeStr}`, centerX, y); y += lineH;
+        ctx.fillText(`최고 레벨: ${playerLevel}`, centerX, y);
 
-        // Blinking retry text
         const alpha = (Math.sin(this.blinkTimer * 3) + 1) / 2;
         ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + alpha * 0.7})`;
-        ctx.font = 'bold 18px monospace';
-        ctx.fillText('Press ENTER to Retry', centerX, centerY + 100);
+        ctx.font = 'bold 20px monospace';
+        const isMobile = this.game.input.isMobile;
+        const retryText = isMobile ? '화면을 터치하여 재시작' : 'Press ENTER to Retry';
+        ctx.fillText(retryText, centerX, centerY + 100);
     }
 
     handleInput(input) {
         if (!this.active) return false;
-
-        if (input === 'Enter') {
-            return true;
-        }
+        if (input === 'Enter') return true;
         return false;
     }
 }

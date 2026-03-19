@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class MagnetAmulet extends Equipment {
     constructor() {
         super({
-            name: '자석 부적',
+            name: '엄마 손수건',
             description: '경험치 흡수 범위 +40%',
-            icon: 'M',
+            icon: '🧣',
             color: '#ff5252',
+            imageSrc: 'images/equipment_icons/equip_handkerchief.png',
         });
         this.radiusBonus = 20; // 픽셀 추가
     }

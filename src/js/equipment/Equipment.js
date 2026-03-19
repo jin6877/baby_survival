@@ -5,8 +5,16 @@ export class Equipment {
         this.description = config.description || '';
         this.icon = config.icon || '?';
         this.color = config.color || '#ffd740';
+        this.imageSrc = config.imageSrc || null;
+        this.image = null;
         this.level = 1;
         this.maxLevel = 5;
+
+        // 이미지 로드
+        if (this.imageSrc) {
+            this.image = new Image();
+            this.image.src = this.imageSrc;
+        }
     }
 
     // 장비 효과 적용 (플레이어 스탯에 반영)

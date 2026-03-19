@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class TimeClock extends Equipment {
     constructor() {
         super({
-            name: '시간의 시계',
-            description: '공격속도 +8%',
-            icon: 'T',
+            name: '낮잠 시계',
+            description: '쿨다운 감소 -8%',
+            icon: '⏰',
             color: '#ab47bc',
+            imageSrc: 'images/equipment_icons/equip_nap_clock.png',
         });
         this.speedBonus = 0.08;
     }

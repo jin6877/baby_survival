@@ -1,4 +1,5 @@
 import { Entity } from '../../core/Entity.js';
+import { assets } from '../../core/AssetManager.js';
 
 export class Enemy extends Entity {
     constructor(x, y, config = {}) {
@@ -11,6 +12,7 @@ export class Enemy extends Entity {
         this.baseSpeed = this.speed;
         this.damage = config.damage || 5;
         this.expValue = config.exp || 1;
+        this.enemyName = config.enemyName || '';
 
         this.knockbackX = 0;
         this.knockbackY = 0;
@@ -18,6 +20,12 @@ export class Enemy extends Entity {
 
         this.damageFlashTimer = 0;
         this.damageFlashDuration = 0.15;
+
+        // 이펙트 스프라이트 키
+        this.effectSpriteKey = config.effectSpriteKey || null;
+        this.effectTimer = 0;
+        this.showEffect = false;
+        this.effectDuration = 0.4;
     }
 
     update(dt, game) {
@@ -46,6 +54,15 @@ export class Enemy extends Entity {
             this.damageFlashTimer -= dt;
         }
 
+        // 이펙트 타이머
+        if (this.showEffect) {
+            this.effectTimer += dt;
+            if (this.effectTimer >= this.effectDuration) {
+                this.showEffect = false;
+                this.effectTimer = 0;
+            }
+        }
+
         this.movementPattern(dt, game);
     }
 
@@ -67,6 +84,8 @@ export class Enemy extends Entity {
 
         this.hp -= amount;
         this.damageFlashTimer = this.damageFlashDuration;
+        this.showEffect = true;
+        this.effectTimer = 0;
 
         // Apply knockback
         if (knockbackAngle !== undefined) {
@@ -121,6 +140,17 @@ export class Enemy extends Entity {
                 this.height
             );
             ctx.restore();
+        }
+
+        // 피격 이펙트 렌더링
+        if (this.showEffect && this.effectSpriteKey) {
+            const effectAlpha = 1 - (this.effectTimer / this.effectDuration);
+            if (effectAlpha > 0) {
+                ctx.globalAlpha = effectAlpha;
+                const effectSize = this.width * 1.5;
+                assets.drawSprite(ctx, this.effectSpriteKey, screenX, screenY, effectSize, effectSize);
+                ctx.globalAlpha = 1;
+            }
         }
 
         // Draw HP bar if damaged

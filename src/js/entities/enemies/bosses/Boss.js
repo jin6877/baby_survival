@@ -10,6 +10,8 @@ export class Boss extends Enemy {
         this.phaseTimer = 0;
         this.showName = true;
         this.bossName = config.bossName || 'Boss';
+        this.effectSpriteKey = config.effectSpriteKey || null;
+        this.enemyName = config.enemyName || '';
     }
 
     update(dt, game) {

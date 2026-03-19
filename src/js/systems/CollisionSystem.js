@@ -59,7 +59,7 @@ export class CollisionSystem {
                     if (!enemy.alive || enemy.hp <= 0) {
                         enemy.onDeath(game);
                         if (game.player) {
-                            game.player.killCount++;
+                            game.player.addKill();
                         }
                     }
 

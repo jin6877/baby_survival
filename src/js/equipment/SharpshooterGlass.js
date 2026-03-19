@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class SharpshooterGlass extends Equipment {
     constructor() {
         super({
-            name: '명사수의 안경',
+            name: '두꺼운 안경',
             description: '투사체 크기 +15%',
-            icon: 'G',
+            icon: '👓',
             color: '#26c6da',
+            imageSrc: 'images/equipment_icons/equip_thick_glasses.png',
         });
         this.sizeBonus = 0.15;
     }

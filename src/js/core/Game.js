@@ -21,8 +21,11 @@ export class Game {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        canvas.width = CANVAS_WIDTH;
-        canvas.height = CANVAS_HEIGHT;
+
+        // Dynamic canvas size based on screen
+        this.canvasW = CANVAS_WIDTH;
+        this.canvasH = CANVAS_HEIGHT;
+        this._resizeCanvas();
 
         this.input = new InputManager();
         this.camera = new Camera();
@@ -70,12 +73,22 @@ export class Game {
         this.mouseY = 0;
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            this.mouseX = e.clientX - rect.left;
-            this.mouseY = e.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            this.mouseX = (e.clientX - rect.left) * scaleX;
+            this.mouseY = (e.clientY - rect.top) * scaleY;
         });
-        canvas.addEventListener('click', () => {
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            this.mouseX = (e.clientX - rect.left) * scaleX;
+            this.mouseY = (e.clientY - rect.top) * scaleY;
             this._handleClick();
         });
+
+        // Touch setup
+        this.input.setupTouch(canvas, this);
 
         // Key events for UI
         this._onKeyDown = (e) => this._handleKeyPress(e.code);
@@ -83,6 +96,39 @@ export class Game {
 
         // Stage clear transition
         this.stageClearTimer = 0;
+
+        // Responsive canvas sizing
+        this._resizeCanvas();
+        window.addEventListener('resize', () => this._resizeCanvas());
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this._resizeCanvas(), 100);
+        });
+    }
+
+    _resizeCanvas() {
+        const windowW = window.innerWidth;
+        const windowH = window.innerHeight;
+
+        // 내부 해상도를 화면 비율에 맞춰 동적으로 설정
+        // 기본 높이 600 기준으로 너비를 화면 비율에 맞게 조절
+        const baseH = 600;
+        const aspect = windowW / windowH;
+        const baseW = Math.round(baseH * aspect);
+
+        this.canvasW = baseW;
+        this.canvasH = baseH;
+        this.canvas.width = baseW;
+        this.canvas.height = baseH;
+
+        // 카메라 뷰포트도 업데이트
+        if (this.camera) {
+            this.camera.width = baseW;
+            this.camera.height = baseH;
+        }
+
+        // 캔버스를 화면 전체에 채우기
+        this.canvas.style.width = `${windowW}px`;
+        this.canvas.style.height = `${windowH}px`;
     }
 
     // HUD에서 참조하는 getter들
@@ -131,13 +177,13 @@ export class Game {
         this.stageIndex = index;
         this.currentStage = new Stage(STAGES[index]);
         this.spawnSystem.spawnTimer = 0;
-        this.spawnSystem.weaponSpawnTimer = 3000; // 첫 무기 3초 후 (이전 5초)
-        this.spawnSystem.equipmentSpawnTimer = 8000; // 첫 장비 8초 후
+        this.spawnSystem.weaponSpawnTimer = 3000;
+        this.spawnSystem.equipmentSpawnTimer = 8000;
     }
 
     update(timestamp) {
         if (this.lastTime === 0) this.lastTime = timestamp;
-        const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05); // cap at 50ms
+        const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
         this.lastTime = timestamp;
 
         if (this.state === 'start' || this.state === 'gameover' || this.state === 'victory') {
@@ -166,7 +212,6 @@ export class Game {
         if (this.currentStage.cleared) {
             this.state = 'stageclear';
             this.stageClearTimer = 3;
-            // 적 전부 제거
             this.enemies = [];
             this.projectiles = [];
             this.enemyBullets = [];
@@ -247,12 +292,14 @@ export class Game {
 
     render() {
         const ctx = this.ctx;
-        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        const W = this.canvasW;
+        const H = this.canvasH;
+        ctx.clearRect(0, 0, W, H);
 
         if (this.state === 'start') {
             ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            this.startScreen.render(ctx);
+            ctx.fillRect(0, 0, W, H);
+            this.startScreen.render(ctx, W, H);
             return;
         }
 
@@ -262,12 +309,13 @@ export class Game {
         }
 
         // Background
-        const bgColor = this.currentStage ? this.currentStage.bgColor : '#1a1a2e';
+        const bgColor = this.currentStage ? this.currentStage.bgColor : '#f5e6d3';
         ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.fillRect(0, 0, W, H);
 
-        // Draw grid (background detail)
-        this._renderGrid(ctx);
+        // Draw themed background
+        const bgTheme = this.currentStage ? this.currentStage.bgTheme : 'livingroom';
+        this._renderThemedBg(ctx, W, H, bgTheme);
 
         // Render effects (below entities)
         for (const effect of this.effects) {
@@ -308,33 +356,38 @@ export class Game {
         if (this.screenFlash) {
             const alpha = this.screenFlash.timer / this.screenFlash.duration;
             ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fillRect(0, 0, W, H);
         }
 
         // HUD
-        this.hud.render(ctx);
+        this.hud.render(ctx, W, H);
+
+        // Virtual joystick
+        if (this.state === 'playing') {
+            this.input.renderJoystick(ctx);
+        }
 
         // Stage clear overlay
         if (this.state === 'stageclear') {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fillRect(0, 0, W, H);
             ctx.fillStyle = '#ffff00';
             ctx.font = 'bold 36px monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('STAGE CLEAR!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+            ctx.fillText('STAGE CLEAR!', W / 2, H / 2 - 20);
             ctx.fillStyle = '#fff';
             ctx.font = '18px monospace';
             const nextStage = this.stageIndex + 2;
             if (nextStage <= STAGES.length) {
-                ctx.fillText(`다음 스테이지: ${nextStage}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
+                ctx.fillText(`다음 스테이지: ${nextStage}`, W / 2, H / 2 + 20);
             }
         }
 
         // Victory overlay
         if (this.state === 'victory') {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fillRect(0, 0, W, H);
             ctx.save();
             ctx.shadowColor = '#ffd700';
             ctx.shadowBlur = 20;
@@ -342,53 +395,97 @@ export class Game {
             ctx.font = 'bold 42px monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('VICTORY!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 40);
+            ctx.fillText('VICTORY!', W / 2, H / 2 - 40);
             ctx.restore();
             ctx.fillStyle = '#fff';
             ctx.font = '18px monospace';
-            ctx.fillText('모든 스테이지를 클리어했습니다!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
-            ctx.fillText(`처치 수: ${this.killCount}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+            ctx.fillText('모든 스테이지를 클리어했습니다!', W / 2, H / 2 + 10);
+            ctx.fillText(`처치 수: ${this.killCount}`, W / 2, H / 2 + 40);
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
             ctx.font = '16px monospace';
-            ctx.fillText('Press ENTER to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 80);
+            const restartText = this.input.isMobile ? '화면을 터치하여 재시작' : 'Press ENTER to Restart';
+            ctx.fillText(restartText, W / 2, H / 2 + 80);
         }
 
         // Level up UI
         if (this.levelUpSystem.active) {
-            this.levelUpUI.render(ctx, this.levelUpSystem.choices);
+            this.levelUpUI.render(ctx, this.levelUpSystem.choices, W, H);
         }
 
         // Weapon swap UI
         if (this.weaponSwapUI.active) {
-            this.weaponSwapUI.render(ctx);
+            this.weaponSwapUI.render(ctx, W, H);
         }
 
         // Game over screen
         if (this.state === 'gameover') {
-            this.gameOverScreen.render(ctx);
+            this.gameOverScreen.render(ctx, W, H);
         }
     }
 
-    _renderGrid(ctx) {
-        const gridSize = 100;
-        const offsetX = -(this.camera.x % gridSize);
-        const offsetY = -(this.camera.y % gridSize);
+    _renderThemedBg(ctx, W, H, theme) {
+        const tileSize = 120;
+        const offsetX = -(this.camera.x % tileSize);
+        const offsetY = -(this.camera.y % tileSize);
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        // 테마별 바닥 타일 색상
+        const themes = {
+            livingroom: { line: 'rgba(180, 150, 120, 0.3)', accent: 'rgba(200, 170, 140, 0.15)' },
+            babyroom:   { line: 'rgba(180, 150, 200, 0.3)', accent: 'rgba(220, 190, 240, 0.15)' },
+            kidscafe:   { line: 'rgba(100, 200, 150, 0.3)', accent: 'rgba(150, 230, 180, 0.15)' },
+            kindergarten: { line: 'rgba(200, 190, 130, 0.3)', accent: 'rgba(230, 220, 160, 0.15)' },
+            playground: { line: 'rgba(130, 180, 220, 0.3)', accent: 'rgba(170, 210, 240, 0.15)' },
+        };
+        const t = themes[theme] || themes.livingroom;
+
+        // 바닥 타일 패턴
+        for (let x = offsetX - tileSize; x < W + tileSize; x += tileSize) {
+            for (let y = offsetY - tileSize; y < H + tileSize; y += tileSize) {
+                const tileX = Math.floor((x - offsetX + this.camera.x) / tileSize);
+                const tileY = Math.floor((y - offsetY + this.camera.y) / tileSize);
+                if ((tileX + tileY) % 2 === 0) {
+                    ctx.fillStyle = t.accent;
+                    ctx.fillRect(x, y, tileSize, tileSize);
+                }
+            }
+        }
+
+        // 그리드 라인
+        ctx.strokeStyle = t.line;
         ctx.lineWidth = 1;
-
-        for (let x = offsetX; x < CANVAS_WIDTH; x += gridSize) {
+        for (let x = offsetX; x < W; x += tileSize) {
             ctx.beginPath();
             ctx.moveTo(x, 0);
-            ctx.lineTo(x, CANVAS_HEIGHT);
+            ctx.lineTo(x, H);
             ctx.stroke();
         }
-        for (let y = offsetY; y < CANVAS_HEIGHT; y += gridSize) {
+        for (let y = offsetY; y < H; y += tileSize) {
             ctx.beginPath();
             ctx.moveTo(0, y);
-            ctx.lineTo(CANVAS_WIDTH, y);
+            ctx.lineTo(W, y);
             ctx.stroke();
         }
+    }
+
+    // Handle touch tap (called from InputManager)
+    _handleTap(x, y) {
+        this.mouseX = x;
+        this.mouseY = y;
+
+        if (this.state === 'start') {
+            this.startGame();
+            return;
+        }
+
+        if (this.state === 'gameover' || this.state === 'victory') {
+            this.state = 'start';
+            this.startScreen.active = true;
+            this.gameOverScreen.active = false;
+            return;
+        }
+
+        // Delegate to click handler for UI interactions
+        this._handleClick();
     }
 
     _handleKeyPress(code) {
@@ -417,7 +514,7 @@ export class Game {
             return;
         }
 
-        // Weapon swap selection (버그 수정: 확실한 일시정지 처리)
+        // Weapon swap selection
         if (this.weaponSwapUI.active) {
             if (code === 'Escape') {
                 this.weaponSwapUI.dismiss();
@@ -441,15 +538,17 @@ export class Game {
     }
 
     _handleClick() {
-        // Level up selection by click
+        const W = this.canvasW;
+        const H = this.canvasH;
+        // Level up selection by click/tap
         if (this.levelUpSystem.active) {
             const choices = this.levelUpSystem.choices;
-            const cardW = 200;
-            const cardH = 120;
-            const cardPadding = 20;
+            const cardW = 220;
+            const cardH = 140;
+            const cardPadding = 16;
             const totalW = choices.length * cardW + (choices.length - 1) * cardPadding;
-            const startX = CANVAS_WIDTH / 2 - totalW / 2;
-            const cardY = CANVAS_HEIGHT / 2 - cardH / 2;
+            const startX = W / 2 - totalW / 2;
+            const cardY = H / 2 - cardH / 2;
 
             for (let i = 0; i < choices.length; i++) {
                 const x = startX + i * (cardW + cardPadding);
@@ -461,10 +560,10 @@ export class Game {
             }
         }
 
-        // Weapon swap selection by click
+        // Weapon swap selection by click/tap
         if (this.weaponSwapUI.active) {
-            const centerX = CANVAS_WIDTH / 2;
-            const cardW = 140;
+            const centerX = W / 2;
+            const cardW = 150;
             const cardPadding = 15;
             const totalW = 4 * cardW + 3 * cardPadding;
             const startX = centerX - totalW / 2;
@@ -488,17 +587,24 @@ export class Game {
                     return;
                 }
             }
+
+            // Tap outside cards = dismiss (like ESC)
+            if (this.input.isMobile) {
+                this.weaponSwapUI.dismiss();
+                this.paused = false;
+                this._pendingWeaponKey = null;
+            }
         }
     }
 
     showWeaponSwapUI(weaponKey) {
         this._pendingWeaponKey = weaponKey;
-        this.paused = true; // 확실하게 일시정지!
+        this.paused = true;
         this.weaponSwapUI.show(weaponKey);
     }
 
     activateMagnet() {
         this.magnetActive = true;
-        this.magnetTimer = 500; // 0.5초
+        this.magnetTimer = 500;
     }
 }

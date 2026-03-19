@@ -1,4 +1,6 @@
+// GiantSkeleton → 과자 봉지: 광역 공격 보스
 import { Boss } from './Boss.js';
+import { assets } from '../../../core/AssetManager.js';
 
 export class GiantSkeleton extends Boss {
     constructor(x, y) {
@@ -6,20 +8,23 @@ export class GiantSkeleton extends Boss {
             hp: 300,
             speed: 0.8,
             damage: 12,
-            size: 48,
+            size: 120,
             spriteKey: 'giantSkeleton',
+            effectSpriteKey: 'giantSkeletonEffect',
+            enemyName: '과자 봉지',
             exp: 20,
-            bossName: 'Giant Skeleton',
+            bossName: '과자 봉지',
             phases: []
         });
 
         this.sweepTimer = 0;
         this.sweepInterval = 3;
         this.sweepRadius = 100;
+        this.sweepEffectTimer = 0;
+        this.showSweepEffect = false;
     }
 
     movementPattern(dt, game) {
-        // Chase player
         if (game.player && game.player.alive) {
             const dx = game.player.x - this.x;
             const dy = game.player.y - this.y;
@@ -31,16 +36,26 @@ export class GiantSkeleton extends Boss {
             }
         }
 
-        // Wide sweep attack every 3 seconds
+        // 과자 부스러기 광역 공격
         this.sweepTimer += dt;
         if (this.sweepTimer >= this.sweepInterval) {
             this.sweepTimer = 0;
             this.sweepAttack(game);
         }
+
+        if (this.showSweepEffect) {
+            this.sweepEffectTimer += dt;
+            if (this.sweepEffectTimer >= 0.5) {
+                this.showSweepEffect = false;
+            }
+        }
     }
 
     sweepAttack(game) {
         if (!game.player || !game.player.alive) return;
+
+        this.showSweepEffect = true;
+        this.sweepEffectTimer = 0;
 
         const dist = this.distanceTo(game.player);
         if (dist <= this.sweepRadius) {
@@ -48,10 +63,20 @@ export class GiantSkeleton extends Boss {
                 game.player.takeDamage(this.damage);
             }
         }
+    }
 
-        // Also damage other entities within radius if needed
-        if (game.enemies) {
-            // Sweep is player-targeted, no friendly fire needed
+    render(ctx, camera) {
+        // 광역 공격 이펙트 (과자 부스러기)
+        if (this.showSweepEffect) {
+            const screenX = this.x - camera.x;
+            const screenY = this.y - camera.y;
+            const effectAlpha = 1 - (this.sweepEffectTimer / 0.5);
+            ctx.globalAlpha = effectAlpha * 0.6;
+            const effectSize = this.sweepRadius * 2;
+            assets.drawSprite(ctx, 'giantSkeletonEffect', screenX, screenY, effectSize, effectSize);
+            ctx.globalAlpha = 1;
         }
+
+        super.render(ctx, camera);
     }
 }

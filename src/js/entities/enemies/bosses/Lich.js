@@ -1,18 +1,19 @@
+// Lich → 아이스크림: 장판형 보스
 import { Boss } from './Boss.js';
 import { EnemyBullet } from '../../projectiles/EnemyBullet.js';
+import { assets } from '../../../core/AssetManager.js';
 
 class HomingBullet extends EnemyBullet {
     constructor(x, y, targetX, targetY, damage) {
         super(x, y, targetX, targetY, damage);
         this.speed = 3;
         this.turnSpeed = 2;
-        this.spriteKey = 'lichBullet';
+        this.spriteKey = 'lichEffect';
     }
 
     update(dt, game) {
         if (!this.alive) return;
 
-        // Home toward player
         if (game && game.player && game.player.alive) {
             const dx = game.player.x - this.x;
             const dy = game.player.y - this.y;
@@ -22,11 +23,9 @@ class HomingBullet extends EnemyBullet {
                 const targetDirX = dx / dist;
                 const targetDirY = dy / dist;
 
-                // Gradually turn toward player
                 this.dirX += (targetDirX - this.dirX) * this.turnSpeed * dt;
                 this.dirY += (targetDirY - this.dirY) * this.turnSpeed * dt;
 
-                // Normalize direction
                 const dirDist = Math.sqrt(this.dirX * this.dirX + this.dirY * this.dirY);
                 if (dirDist > 0) {
                     this.dirX /= dirDist;
@@ -40,7 +39,6 @@ class HomingBullet extends EnemyBullet {
 
         this.rotation = Math.atan2(this.dirY, this.dirX);
 
-        // Destroy if out of bounds
         if (Math.abs(this.x) > 5000 || Math.abs(this.y) > 5000) {
             this.alive = false;
         }
@@ -70,19 +68,16 @@ class AoEZone {
             return;
         }
 
-        // Damage and slow player if in zone
         if (game.player && game.player.alive) {
             const dx = game.player.x - this.x;
             const dy = game.player.y - this.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist <= this.radius) {
-                // Slow player
                 if (game.player.speed !== undefined) {
                     game.player.slowMultiplier = this.slowFactor;
                 }
 
-                // Damage tick
                 this.damageTickTimer += dt;
                 if (this.damageTickTimer >= this.damageTickInterval) {
                     this.damageTickTimer = 0;
@@ -100,15 +95,22 @@ class AoEZone {
         const screenX = this.x - camera.x;
         const screenY = this.y - camera.y;
 
-        const alpha = 0.3 * (1 - this.timer / this.duration);
-        ctx.fillStyle = `rgba(100, 0, 200, ${alpha})`;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        const alpha = 0.4 * (1 - this.timer / this.duration);
+        // 아이스크림 녹는 장판 이펙트
+        if (assets.hasSprite('lichEffect')) {
+            ctx.globalAlpha = alpha + 0.1;
+            assets.drawSprite(ctx, 'lichEffect', screenX, screenY, this.radius * 2, this.radius * 2);
+            ctx.globalAlpha = 1;
+        } else {
+            ctx.fillStyle = `rgba(255, 182, 193, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+            ctx.fill();
 
-        ctx.strokeStyle = `rgba(150, 50, 255, ${alpha + 0.2})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+            ctx.strokeStyle = `rgba(255, 105, 180, ${alpha + 0.2})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
     }
 }
 
@@ -118,10 +120,12 @@ export class Lich extends Boss {
             hp: 800,
             speed: 1.3,
             damage: 15,
-            size: 40,
+            size: 116,
             spriteKey: 'lich',
+            effectSpriteKey: 'lichEffect',
+            enemyName: '아이스크림',
             exp: 60,
-            bossName: 'Lich',
+            bossName: '아이스크림',
             phases: []
         });
 
@@ -139,7 +143,6 @@ export class Lich extends Boss {
     movementPattern(dt, game) {
         if (!game.player || !game.player.alive) return;
 
-        // Chase player
         const dx = game.player.x - this.x;
         const dy = game.player.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -149,7 +152,7 @@ export class Lich extends Boss {
             this.y += (dy / dist) * this.speed * 60 * dt;
         }
 
-        // Create AoE zones at player's position
+        // 아이스크림 녹는 장판 생성
         this.aoeTimer += dt;
         if (this.aoeTimer >= this.aoeInterval) {
             this.aoeTimer = 0;
@@ -161,7 +164,6 @@ export class Lich extends Boss {
             this.aoeZones.push(zone);
         }
 
-        // Update AoE zones
         for (let i = this.aoeZones.length - 1; i >= 0; i--) {
             this.aoeZones[i].update(dt, game);
             if (!this.aoeZones[i].alive) {
@@ -169,7 +171,7 @@ export class Lich extends Boss {
             }
         }
 
-        // Shoot homing bullets
+        // 유도 아이스크림 발사
         this.shootTimer += dt;
         if (this.shootTimer >= this.shootInterval) {
             this.shootTimer = 0;
@@ -189,7 +191,6 @@ export class Lich extends Boss {
     }
 
     render(ctx, camera) {
-        // Render AoE zones first (below boss)
         for (const zone of this.aoeZones) {
             zone.render(ctx, camera);
         }

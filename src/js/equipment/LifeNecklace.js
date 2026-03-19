@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class LifeNecklace extends Equipment {
     constructor() {
         super({
-            name: '생명의 목걸이',
+            name: '젖병 목걸이',
             description: '최대 HP +20, HP 재생 0.5/초',
-            icon: 'H',
+            icon: '🍼',
             color: '#e91e63',
+            imageSrc: 'images/equipment_icons/equip_bottle_necklace.png',
         });
         this.hpBonus = 20;
         this.regenBonus = 0.5;

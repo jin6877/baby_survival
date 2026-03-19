@@ -1,3 +1,4 @@
+// Slime → 장염균: 자폭형 적군
 import { Enemy } from './Enemy.js';
 
 export class Slime extends Enemy {
@@ -6,8 +7,9 @@ export class Slime extends Enemy {
             hp: 30,
             speed: 2.5,
             damage: 25,
-            size: 20,
+            size: 60,
             spriteKey: 'slime',
+            enemyName: '장염균',
             exp: 2
         });
 

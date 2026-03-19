@@ -1,6 +1,8 @@
+// Necromancer → 사탕 괴물: 소환형 보스
 import { Boss } from './Boss.js';
 import { Zombie } from '../Zombie.js';
 import { EnemyBullet } from '../../projectiles/EnemyBullet.js';
+import { assets } from '../../../core/AssetManager.js';
 
 export class Necromancer extends Boss {
     constructor(x, y) {
@@ -8,10 +10,12 @@ export class Necromancer extends Boss {
             hp: 500,
             speed: 1.2,
             damage: 10,
-            size: 40,
+            size: 116,
             spriteKey: 'necromancer',
+            effectSpriteKey: 'necromancerEffect',
+            enemyName: '사탕 괴물',
             exp: 50,
-            bossName: 'Necromancer',
+            bossName: '사탕 괴물',
             phases: [
                 { threshold: 0.5 }
             ]
@@ -19,6 +23,8 @@ export class Necromancer extends Boss {
 
         this.summonTimer = 0;
         this.shootTimer = 0;
+        this.summonEffectTimer = 0;
+        this.showSummonEffect = false;
     }
 
     onPhaseChange(phase) {
@@ -30,7 +36,6 @@ export class Necromancer extends Boss {
     movementPattern(dt, game) {
         if (!game.player || !game.player.alive) return;
 
-        // Chase player
         const dx = game.player.x - this.x;
         const dy = game.player.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -42,7 +47,7 @@ export class Necromancer extends Boss {
 
         const isPhase2 = this.currentPhase >= 1;
 
-        // Summon zombies
+        // 병균 소환
         this.summonTimer += dt;
         const summonInterval = isPhase2 ? 4 : 5;
         const summonCount = isPhase2 ? 5 : 3;
@@ -52,7 +57,7 @@ export class Necromancer extends Boss {
             this.summonZombies(game, summonCount);
         }
 
-        // Shoot bullets
+        // 사탕 총알 발사
         this.shootTimer += dt;
         const shootInterval = isPhase2 ? 2 : 3;
         const bulletCount = isPhase2 ? 5 : 3;
@@ -61,10 +66,20 @@ export class Necromancer extends Boss {
             this.shootTimer = 0;
             this.shootSpread(game, bulletCount);
         }
+
+        if (this.showSummonEffect) {
+            this.summonEffectTimer += dt;
+            if (this.summonEffectTimer >= 0.6) {
+                this.showSummonEffect = false;
+            }
+        }
     }
 
     summonZombies(game, count) {
         if (!game.enemies) return;
+
+        this.showSummonEffect = true;
+        this.summonEffectTimer = 0;
 
         for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 / count) * i;
@@ -83,7 +98,7 @@ export class Necromancer extends Boss {
         const dx = game.player.x - this.x;
         const dy = game.player.y - this.y;
         const baseAngle = Math.atan2(dy, dx);
-        const spreadAngle = Math.PI / 6; // 30 degrees total spread
+        const spreadAngle = Math.PI / 6;
 
         for (let i = 0; i < bulletCount; i++) {
             const offset = (i - (bulletCount - 1) / 2) * (spreadAngle / Math.max(bulletCount - 1, 1));
@@ -94,5 +109,20 @@ export class Necromancer extends Boss {
             const bullet = new EnemyBullet(this.x, this.y, targetX, targetY, this.damage);
             game.enemyBullets.push(bullet);
         }
+    }
+
+    render(ctx, camera) {
+        // 소환 이펙트 (사탕 별)
+        if (this.showSummonEffect) {
+            const screenX = this.x - camera.x;
+            const screenY = this.y - camera.y;
+            const effectAlpha = 1 - (this.summonEffectTimer / 0.6);
+            ctx.globalAlpha = effectAlpha * 0.8;
+            const effectSize = 80 + this.summonEffectTimer * 60;
+            assets.drawSprite(ctx, 'necromancerEffect', screenX, screenY, effectSize, effectSize);
+            ctx.globalAlpha = 1;
+        }
+
+        super.render(ctx, camera);
     }
 }

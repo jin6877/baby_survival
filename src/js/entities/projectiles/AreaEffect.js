@@ -1,5 +1,6 @@
-// AreaEffect: 범위 효과 (원형 데미지 존)
+// AreaEffect: 범위 효과 (원형 데미지 존) - 이미지 기반
 import { Entity } from '../../core/Entity.js';
+import { assets } from '../../core/AssetManager.js';
 
 export class AreaEffect extends Entity {
     constructor(x, y, config = {}) {
@@ -13,10 +14,12 @@ export class AreaEffect extends Entity {
         this.color = config.color || '#42a5f5';
         this.owner = config.owner || null;
         this.followOwner = config.followOwner || false;
+        this.spriteKey = config.spriteKey || null;
 
         this.elapsed = 0;
         this.tickTimer = 0;
         this.pulsePhase = 0;
+        this.rotation = 0;
     }
 
     update(dt, game) {
@@ -31,6 +34,7 @@ export class AreaEffect extends Entity {
         this.elapsed += dt * 1000;
         this.tickTimer += dt * 1000;
         this.pulsePhase += dt * 5;
+        this.rotation += dt * 1.5;
 
         // 틱 데미지
         if (this.tickTimer >= this.tickInterval) {
@@ -66,26 +70,51 @@ export class AreaEffect extends Entity {
         const screenY = this.y - camera.y;
 
         // 화면 밖이면 스킵
-        if (screenX < -this.radius || screenX > camera.width + this.radius ||
-            screenY < -this.radius || screenY > camera.height + this.radius) {
+        if (screenX < -this.radius - 50 || screenX > camera.width + this.radius + 50 ||
+            screenY < -this.radius - 50 || screenY > camera.height + this.radius + 50) {
             return;
         }
 
-        const pulse = 0.3 + Math.sin(this.pulsePhase) * 0.1;
+        const pulse = 0.5 + Math.sin(this.pulsePhase) * 0.15;
         const fadeRatio = 1 - (this.elapsed / this.duration);
 
-        ctx.globalAlpha = pulse * fadeRatio;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
 
-        // 테두리
-        ctx.globalAlpha = (0.5 + Math.sin(this.pulsePhase) * 0.2) * fadeRatio;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (this.spriteKey && assets.hasSprite(this.spriteKey)) {
+            // 이미지 기반 렌더링
+            ctx.globalAlpha = pulse * fadeRatio;
+            const imgSize = this.radius * 2.4;
+            assets.drawSprite(ctx, this.spriteKey, screenX, screenY, imgSize, imgSize, this.rotation);
 
-        ctx.globalAlpha = 1;
+            // 반투명 원형 범위 표시
+            ctx.globalAlpha = 0.15 * fadeRatio;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+            ctx.stroke();
+        } else {
+            // 폴백: 코드 기반 렌더링 (크기 강화)
+            ctx.globalAlpha = pulse * fadeRatio;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 테두리
+            ctx.globalAlpha = (0.6 + Math.sin(this.pulsePhase) * 0.2) * fadeRatio;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 내부 펄스 링
+            ctx.globalAlpha = 0.3 * fadeRatio;
+            const innerRadius = this.radius * (0.3 + Math.sin(this.pulsePhase * 1.5) * 0.2);
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, innerRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        ctx.restore();
     }
 }

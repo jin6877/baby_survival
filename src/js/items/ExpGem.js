@@ -5,7 +5,7 @@ export class ExpGem extends Item {
     constructor(x, y, large = false) {
         super(x, y, {
             spriteKey: large ? 'expGemLarge' : 'expGemSmall',
-            size: large ? 14 : 10,
+            size: large ? 44 : 32,
             duration: 0, // Stays forever
         });
 

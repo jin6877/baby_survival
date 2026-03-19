@@ -4,7 +4,7 @@ export class Bomb extends Item {
     constructor(x, y) {
         super(x, y, {
             spriteKey: 'bomb',
-            size: 16,
+            size: 48,
             duration: 12000,
         });
     }

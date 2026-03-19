@@ -1,12 +1,25 @@
 import { Item } from './Item.js';
 import { WeaponRegistry } from '../data/WeaponRegistry.js';
+import { assets } from '../core/AssetManager.js';
+
+// 무기 키 → 픽업 표시용 스프라이트 키 매핑
+const WEAPON_SPRITE_MAP = {
+    dagger: 'daggerProjectile',
+    axe: 'axeProjectile',
+    magicWand: 'magicProjectile',
+    cross: 'crossProjectile',
+    lightning: 'weaponMomTears',
+    holyWater: 'weaponDadVoice',
+    garlic: 'weaponBottle',
+    firebomb: 'weaponToyBomb',
+};
 
 export class WeaponPickup extends Item {
     constructor(x, y, weaponKey) {
         super(x, y, {
             spriteKey: 'weaponPickup',
-            size: 20,
-            duration: 30000, // 30초 (이전 20초)
+            size: 52,
+            duration: 30000,
         });
 
         this.weaponKey = weaponKey;
@@ -16,7 +29,6 @@ export class WeaponPickup extends Item {
         const weaponData = WeaponRegistry.get(this.weaponKey);
         if (!weaponData) return;
 
-        // 같은 타입의 무기가 있으면 레벨업
         const existingWeapon = player.weapons.find(
             w => w.constructor === weaponData.weaponClass
         );
@@ -26,14 +38,12 @@ export class WeaponPickup extends Item {
             return;
         }
 
-        // 빈 슬롯이 있으면 추가
         if (player.weapons.length < player.maxWeapons) {
             const weapon = WeaponRegistry.create(this.weaponKey);
             if (weapon) {
                 player.addWeapon(weapon);
             }
         } else {
-            // 무기 슬롯이 다 찬 경우 - 교체 UI 표시 (일시정지됨)
             if (game.showWeaponSwapUI) {
                 game.showWeaponSwapUI(this.weaponKey);
             }
@@ -46,28 +56,36 @@ export class WeaponPickup extends Item {
         const screenX = this.x - camera.x;
         const screenY = this.y - camera.y;
 
-        // Off-screen culling
         if (screenX < -this.width || screenX > camera.width + this.width ||
             screenY < -this.height || screenY > camera.height + this.height) {
             return;
         }
 
-        // 무기 픽업 글로우
         ctx.save();
         ctx.shadowColor = '#76ff03';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
 
-        // 아이콘
-        ctx.fillStyle = '#76ff03';
+        // 배경 원
+        ctx.fillStyle = 'rgba(118, 255, 3, 0.7)';
         ctx.beginPath();
         ctx.arc(screenX, screenY, this.width / 2, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('W', screenX, screenY);
+        // 무기 투사체 이미지가 있으면 이미지로 표시
+        const spriteKey = WEAPON_SPRITE_MAP[this.weaponKey];
+        if (spriteKey && assets.hasSprite(spriteKey)) {
+            const imgSize = this.width * 0.7;
+            assets.drawSprite(ctx, spriteKey, screenX, screenY, imgSize, imgSize);
+        } else {
+            // 이미지 없는 무기는 이모지/이름 첫글자
+            const weaponData = WeaponRegistry.get(this.weaponKey);
+            const name = weaponData ? weaponData.name : '?';
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(name.charAt(0), screenX, screenY);
+        }
 
         ctx.restore();
 
@@ -76,8 +94,8 @@ export class WeaponPickup extends Item {
         const name = weaponData ? weaponData.name : this.weaponKey;
 
         ctx.fillStyle = '#76ff03';
-        ctx.font = '10px monospace';
+        ctx.font = 'bold 13px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(name, screenX, screenY + this.height / 2 + 12);
+        ctx.fillText(name, screenX, screenY + this.height / 2 + 14);
     }
 }

@@ -1,3 +1,4 @@
+// Ghost → 감기 바이러스: 원거리 공격 적군
 import { Enemy } from './Enemy.js';
 import { EnemyBullet } from '../projectiles/EnemyBullet.js';
 
@@ -7,8 +8,10 @@ export class Ghost extends Enemy {
             hp: 15,
             speed: 2,
             damage: 10,
-            size: 20,
+            size: 60,
             spriteKey: 'ghost',
+            effectSpriteKey: 'ghostEffect',
+            enemyName: '감기 바이러스',
             exp: 2
         });
 

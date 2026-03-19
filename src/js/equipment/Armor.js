@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class Armor extends Equipment {
     constructor() {
         super({
-            name: '갑옷',
+            name: '아기 헬멧',
             description: '받는 데미지 -15%',
-            icon: 'A',
+            icon: '⛑',
             color: '#78909c',
+            imageSrc: 'images/equipment_icons/equip_helmet.png',
         });
         this.reduction = 0.15;
     }

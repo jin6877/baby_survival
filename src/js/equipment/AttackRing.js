@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class AttackRing extends Equipment {
     constructor() {
         super({
-            name: '공격의 반지',
+            name: '아빠 응원',
             description: '공격력 +15%',
-            icon: 'R',
+            icon: '💪',
             color: '#ff7043',
+            imageSrc: 'images/equipment_icons/equip_dad_cheer.png',
         });
         this.attackBonus = 0.15;
     }

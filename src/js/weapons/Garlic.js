@@ -1,14 +1,15 @@
-// Garlic: 마늘 무기 - 강화 버전
+// Garlic: 젖병 방어막 무기 - 이미지 기반 이펙트
 import { Weapon } from './Weapon.js';
+import { assets } from '../core/AssetManager.js';
 
 export class Garlic extends Weapon {
     constructor() {
         super({
-            name: '마늘',
+            name: '젖병 방어막',
             damage: 8,
             cooldown: 1000,
             spriteKey: 'garlic',
-            description: '주변 적에게 데미지를 주고 밀어냅니다.',
+            description: '젖병의 힘으로 주변 적을 밀어냅니다!',
         });
 
         this.radius = 70;
@@ -17,6 +18,7 @@ export class Garlic extends Weapon {
         this.pulseTimer = 0;
         this.pulseDuration = 300;
         this.isPulsing = false;
+        this.shieldRotation = 0;
     }
 
     attack(game) {
@@ -53,6 +55,8 @@ export class Garlic extends Weapon {
     update(dt, game) {
         super.update(dt, game);
 
+        this.shieldRotation += dt * 2;
+
         if (this.isPulsing) {
             this.pulseTimer += dt * 1000;
             if (this.pulseTimer >= this.pulseDuration) {
@@ -69,20 +73,42 @@ export class Garlic extends Weapon {
 
         const progress = this.pulseTimer / this.pulseDuration;
         const currentRadius = this.radius * (0.5 + progress * 0.5);
-        const alpha = 0.4 * (1 - progress);
+        const alpha = 0.7 * (1 - progress);
 
+        ctx.save();
         ctx.globalAlpha = alpha;
 
-        ctx.fillStyle = 'rgba(200, 230, 150, 0.3)';
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, currentRadius, 0, Math.PI * 2);
-        ctx.fill();
+        if (assets.hasSprite('bottleShieldEffect')) {
+            // 이미지 기반: 회전하는 방어막 이미지
+            const shieldSize = currentRadius * 2.2;
+            assets.drawSprite(ctx, 'bottleShieldEffect', screenX, screenY, shieldSize, shieldSize, this.shieldRotation);
 
-        ctx.strokeStyle = 'rgba(180, 220, 100, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+            // 추가 반투명 링 효과
+            ctx.globalAlpha = alpha * 0.3;
+            ctx.strokeStyle = 'rgba(255, 220, 180, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, currentRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        } else {
+            // 폴백: 우유색 원
+            ctx.fillStyle = 'rgba(255, 248, 230, 0.3)';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, currentRadius, 0, Math.PI * 2);
+            ctx.fill();
 
-        ctx.globalAlpha = 1;
+            ctx.strokeStyle = 'rgba(255, 220, 180, 0.7)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(255, 240, 210, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, currentRadius * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        ctx.restore();
     }
 
     onUpgrade() {
@@ -90,23 +116,23 @@ export class Garlic extends Weapon {
             case 2:
                 this.damage = 12;
                 this.radius = 85;
-                this.description = '데미지 증가, 범위 확장.';
+                this.description = '방어막이 넓어집니다!';
                 break;
             case 3:
                 this.cooldown = 800;
                 this.knockbackForce = 8;
-                this.description = '빠른 공격, 강한 넉백.';
+                this.description = '더 빠르고 강한 넉백!';
                 break;
             case 4:
                 this.radius = 110;
                 this.damage = 16;
-                this.description = '넓은 범위, 높은 데미지.';
+                this.description = '넓은 젖병 방어막!';
                 break;
             case 5:
                 this.radius = 140;
                 this.knockbackForce = 14;
                 this.damage = 22;
-                this.description = '거대한 마늘 오라! 모든 것을 밀어낸다!';
+                this.description = '거대한 젖병 방어막! 모두 밀어낸다!';
                 break;
         }
     }

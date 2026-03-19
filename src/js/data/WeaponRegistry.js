@@ -61,11 +61,11 @@ export const WeaponRegistry = {
 };
 
 // 모든 무기 등록
-WeaponRegistry.register('dagger', { name: '단검', weaponClass: Dagger, description: '가장 가까운 적에게 단검을 발사합니다.' });
-WeaponRegistry.register('holyWater', { name: '성수', weaponClass: HolyWater, description: '플레이어 주변에 성수 범위 효과를 생성합니다.' });
-WeaponRegistry.register('axe', { name: '도끼', weaponClass: Axe, description: '위로 올라갔다 내려오는 도끼를 던집니다.' });
-WeaponRegistry.register('magicWand', { name: '마법봉', weaponClass: MagicWand, description: '랜덤 적에게 유도 마법 투사체를 발사합니다.' });
-WeaponRegistry.register('cross', { name: '십자가', weaponClass: Cross, description: '부메랑처럼 돌아오는 십자가를 발사합니다.' });
-WeaponRegistry.register('lightning', { name: '번개', weaponClass: Lightning, description: '랜덤 적에게 번개를 내려칩니다.' });
-WeaponRegistry.register('garlic', { name: '마늘', weaponClass: Garlic, description: '주변 적에게 데미지를 주고 밀어냅니다.' });
-WeaponRegistry.register('firebomb', { name: '화염병', weaponClass: Firebomb, description: '플레이어 근처에 화염 지대를 생성합니다.' });
+WeaponRegistry.register('dagger', { name: '엄마 손', weaponClass: Dagger, description: '가장 가까운 적에게 엄마 손을 날립니다.' });
+WeaponRegistry.register('holyWater', { name: '아빠 목소리', weaponClass: HolyWater, description: '아빠의 우렁찬 목소리로 주변을 공격합니다.' });
+WeaponRegistry.register('axe', { name: '아빠 슬리퍼', weaponClass: Axe, description: '아빠의 슬리퍼가 포물선을 그리며 날아갑니다!' });
+WeaponRegistry.register('magicWand', { name: '엄마 잔소리', weaponClass: MagicWand, description: '엄마의 잔소리가 적을 추적합니다!' });
+WeaponRegistry.register('cross', { name: '기저귀', weaponClass: Cross, description: '부메랑처럼 회전하며 돌아오는 기저귀!' });
+WeaponRegistry.register('lightning', { name: '엄마 눈물', weaponClass: Lightning, description: '엄마의 눈물이 적에게 즉발 데미지!' });
+WeaponRegistry.register('garlic', { name: '젖병 방어막', weaponClass: Garlic, description: '젖병의 힘으로 주변 적을 밀어냅니다!' });
+WeaponRegistry.register('firebomb', { name: '장난감 폭탄', weaponClass: Firebomb, description: '장난감 폭탄으로 폭발 영역을 만듭니다!' });

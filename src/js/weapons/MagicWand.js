@@ -5,11 +5,11 @@ import { HomingProjectile } from '../entities/projectiles/HomingProjectile.js';
 export class MagicWand extends Weapon {
     constructor() {
         super({
-            name: '마법봉',
-            damage: 15,       // 12 → 15
-            cooldown: 1200,   // 1500 → 1200
+            name: '엄마 잔소리',
+            damage: 15,
+            cooldown: 1200,
             spriteKey: 'magicWand',
-            description: '랜덤 적에게 유도 마법 투사체를 발사합니다.',
+            description: '엄마의 잔소리가 적을 추적합니다!',
         });
 
         this.projectileCount = 1;
@@ -32,7 +32,7 @@ export class MagicWand extends Weapon {
                 speed: 5,  // 4 → 5
                 damage: this.getEffectiveDamage(game),
                 spriteKey: 'magicProjectile',
-                size: 10,
+                size: 38,
                 target,
                 owner: game.player,
                 explodeOnHit: this.explodeOnHit,
@@ -49,21 +49,21 @@ export class MagicWand extends Weapon {
             case 2:
                 this.damage = 22;
                 this.projectileCount = 2;
-                this.description = '2개의 유도탄, 데미지 증가.';
+                this.description = '잔소리가 2배로!';
                 break;
             case 3:
                 this.cooldown = 900;
-                this.description = '쿨다운이 크게 감소합니다.';
+                this.description = '엄마가 더 자주 잔소리합니다!';
                 break;
             case 4:
                 this.projectileCount = 3;
                 this.explodeOnHit = true;
-                this.description = '3개의 유도탄 + 적중 시 폭발!';
+                this.description = '3중 잔소리 + 적중 시 폭발!';
                 break;
             case 5:
                 this.projectileCount = 4;
                 this.damage = 30;
-                this.description = '4개의 고데미지 폭발 유도탄!';
+                this.description = '엄마의 끝없는 잔소리 폭격!';
                 break;
         }
     }

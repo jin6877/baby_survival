@@ -5,11 +5,11 @@ import { Projectile } from '../entities/projectiles/Projectile.js';
 export class Dagger extends Weapon {
     constructor() {
         super({
-            name: '단검',
-            damage: 8,
+            name: '엄마 손',
+            damage: 15,
             cooldown: 800,
             spriteKey: 'dagger',
-            description: '가장 가까운 적에게 단검을 발사합니다.',
+            description: '가장 가까운 적에게 엄마 손을 날립니다.',
         });
 
         this.projectileCount = 1;
@@ -57,7 +57,7 @@ export class Dagger extends Weapon {
                 speed: 6,
                 damage: this.getEffectiveDamage(game),
                 spriteKey: 'daggerProjectile',
-                size: 10,
+                size: 40,
                 piercing: this.piercing,
                 owner: game.player,
             });
@@ -72,22 +72,22 @@ export class Dagger extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = Math.round(8 * 1.3);
-                this.description = '데미지가 30% 증가합니다.';
+                this.damage = Math.round(15 * 1.3);
+                this.description = '엄마 손이 더 아파집니다!';
                 break;
             case 3:
                 this.cooldown = 800 * 0.75;
-                this.description = '공격 속도가 25% 증가합니다.';
+                this.description = '엄마 손이 더 빨라집니다!';
                 break;
             case 4:
                 this.projectileCount = 2;
                 this.spread = 0.15;
-                this.description = '2개의 단검을 발사합니다.';
+                this.description = '양손으로 때립니다!';
                 break;
             case 5:
                 this.projectileCount = 3;
                 this.piercing = true;
-                this.description = '3개의 관통 단검을 발사합니다.';
+                this.description = '관통하는 엄마의 분노!';
                 break;
         }
     }

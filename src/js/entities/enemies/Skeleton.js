@@ -1,3 +1,4 @@
+// Skeleton → A형 독감: 강한 추적 적군
 import { Enemy } from './Enemy.js';
 
 export class Skeleton extends Enemy {
@@ -6,11 +7,13 @@ export class Skeleton extends Enemy {
             hp: 35,
             speed: 1.8,
             damage: 8,
-            size: 24,
+            size: 68,
             spriteKey: 'skeleton',
+            effectSpriteKey: 'skeletonEffect',
+            enemyName: 'A형 독감',
             exp: 2
         });
     }
 
-    // Uses default movementPattern (normal chase toward player)
+    // 기본 movementPattern 사용 (플레이어 추적)
 }

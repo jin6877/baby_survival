@@ -5,11 +5,11 @@ import { BoomerangProjectile } from '../entities/projectiles/BoomerangProjectile
 export class Cross extends Weapon {
     constructor() {
         super({
-            name: '십자가',
-            damage: 15,
-            cooldown: 2500,
+            name: '기저귀',
+            damage: 12,
+            cooldown: 1500,
             spriteKey: 'cross',
-            description: '부메랑처럼 돌아오는 십자가를 발사합니다.',
+            description: '부메랑처럼 회전하며 돌아오는 기저귀!',
         });
 
         this.projectileCount = 1;
@@ -52,7 +52,7 @@ export class Cross extends Weapon {
 
             const proj = new BoomerangProjectile(px, py, {
                 damage: this.getEffectiveDamage(game),
-                size: Math.round(16 * this.sizeMultiplier),
+                size: Math.round(46 * this.sizeMultiplier),
                 maxRange: 200 * this.rangeMultiplier,
                 dirX: Math.cos(angle),
                 dirY: Math.sin(angle),
@@ -67,21 +67,21 @@ export class Cross extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = Math.round(15 * 1.3);
-                this.description = '데미지가 30% 증가합니다.';
+                this.damage = Math.round(12 * 1.3);
+                this.description = '기저귀가 더 세게 때립니다!';
                 break;
             case 3:
-                this.cooldown = 2500 * 0.75;
-                this.description = '쿨다운이 25% 감소합니다.';
+                this.cooldown = 1500 * 0.75;
+                this.description = '더 빠르게 기저귀를 던집니다!';
                 break;
             case 4:
                 this.projectileCount = 2;
-                this.description = '반대 방향으로 2개의 십자가를 발사합니다.';
+                this.description = '양쪽으로 기저귀 2개 발사!';
                 break;
             case 5:
                 this.sizeMultiplier = 1.5;
                 this.rangeMultiplier = 1.5;
-                this.description = '더 크고 멀리 나가는 십자가 2개를 발사합니다.';
+                this.description = '거대 기저귀 2개! 관통!';
                 break;
         }
     }

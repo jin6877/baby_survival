@@ -50,11 +50,11 @@ export const EquipmentRegistry = {
 };
 
 // 모든 장비 등록
-EquipmentRegistry.register('magnetAmulet', { name: '자석 부적', equipmentClass: MagnetAmulet, description: '경험치 흡수 범위 증가', icon: 'M', color: '#ff5252' });
-EquipmentRegistry.register('armor', { name: '갑옷', equipmentClass: Armor, description: '받는 데미지 감소', icon: 'A', color: '#78909c' });
-EquipmentRegistry.register('swiftBoots', { name: '민첩의 장화', equipmentClass: SwiftBoots, description: '이동속도 증가', icon: 'B', color: '#4fc3f7' });
-EquipmentRegistry.register('attackRing', { name: '공격의 반지', equipmentClass: AttackRing, description: '공격력 증가', icon: 'R', color: '#ff7043' });
-EquipmentRegistry.register('lifeNecklace', { name: '생명의 목걸이', equipmentClass: LifeNecklace, description: '최대 HP + HP 재생', icon: 'H', color: '#e91e63' });
-EquipmentRegistry.register('timeClock', { name: '시간의 시계', equipmentClass: TimeClock, description: '공격속도 증가', icon: 'T', color: '#ab47bc' });
-EquipmentRegistry.register('sharpshooterGlass', { name: '명사수의 안경', equipmentClass: SharpshooterGlass, description: '투사체 크기 증가', icon: 'G', color: '#26c6da' });
-EquipmentRegistry.register('luckyClover', { name: '행운의 클로버', equipmentClass: LuckyClover, description: '경험치 획득 증가', icon: 'L', color: '#66bb6a' });
+EquipmentRegistry.register('magnetAmulet', { name: '엄마 손수건', equipmentClass: MagnetAmulet, description: '경험치 흡수 범위 증가', icon: '🧣', color: '#ff5252' });
+EquipmentRegistry.register('armor', { name: '아기 헬멧', equipmentClass: Armor, description: '받는 데미지 감소', icon: '⛑', color: '#78909c' });
+EquipmentRegistry.register('swiftBoots', { name: '아기 신발', equipmentClass: SwiftBoots, description: '이동속도 증가', icon: '👟', color: '#4fc3f7' });
+EquipmentRegistry.register('attackRing', { name: '아빠 응원', equipmentClass: AttackRing, description: '공격력 증가', icon: '💪', color: '#ff7043' });
+EquipmentRegistry.register('lifeNecklace', { name: '젖병 목걸이', equipmentClass: LifeNecklace, description: '최대 HP + HP 재생', icon: '🍼', color: '#e91e63' });
+EquipmentRegistry.register('timeClock', { name: '낮잠 시계', equipmentClass: TimeClock, description: '쿨다운 감소', icon: '⏰', color: '#ab47bc' });
+EquipmentRegistry.register('sharpshooterGlass', { name: '두꺼운 안경', equipmentClass: SharpshooterGlass, description: '투사체 크기/속도 증가', icon: '👓', color: '#26c6da' });
+EquipmentRegistry.register('luckyClover', { name: '행운의 곰돌이', equipmentClass: LuckyClover, description: '경험치 획득 증가', icon: '🧸', color: '#66bb6a' });

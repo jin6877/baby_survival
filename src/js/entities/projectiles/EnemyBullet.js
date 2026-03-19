@@ -2,7 +2,7 @@ import { Entity } from '../../core/Entity.js';
 
 export class EnemyBullet extends Entity {
     constructor(x, y, targetX, targetY, damage) {
-        super(x, y, 8, 8, 'ghostBullet');
+        super(x, y, 24, 24, 'ghostBullet');
 
         this.damage = damage || 5;
         this.speed = 4;
@@ -29,8 +29,8 @@ export class EnemyBullet extends Entity {
         this.x += this.dirX * this.speed * 60 * dt;
         this.y += this.dirY * this.speed * 60 * dt;
 
-        // Destroy if out of world bounds
-        if (this.x < -100 || this.x > 3200 || this.y < -100 || this.y > 3200) {
+        // 화면 밖으로 너무 멀리 나가면 제거
+        if (Math.abs(this.x) > 10000 || Math.abs(this.y) > 10000) {
             this.alive = false;
         }
     }

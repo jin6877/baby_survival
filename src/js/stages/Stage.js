@@ -2,7 +2,8 @@ export class Stage {
     constructor(config = {}) {
         this.stageNumber = config.stageNumber || 1;
         this.duration = config.duration || 60;
-        this.bgColor = config.bgColor || '#1a1a2e';
+        this.bgColor = config.bgColor || '#f5e6d3';
+        this.bgTheme = config.bgTheme || 'livingroom';
         this.spawnConfig = config.spawnConfig || [];
         this.bossConfig = config.bossConfig || null;
         this.weaponSpawnInterval = config.weaponSpawnInterval || 35000;

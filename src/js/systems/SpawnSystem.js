@@ -4,7 +4,7 @@ import { EquipmentPickup } from '../items/EquipmentPickup.js';
 import { EnemyRegistry } from '../data/EnemyRegistry.js';
 import { WeaponRegistry } from '../data/WeaponRegistry.js';
 import { EquipmentRegistry } from '../data/EquipmentRegistry.js';
-import { WORLD_SIZE } from '../data/Constants.js';
+// 무한 월드
 
 export class SpawnSystem {
     constructor(game) {
@@ -74,8 +74,7 @@ export class SpawnSystem {
         let x = player.x + Math.cos(angle) * radius;
         let y = player.y + Math.sin(angle) * radius;
 
-        x = Math.max(0, Math.min(WORLD_SIZE, x));
-        y = Math.max(0, Math.min(WORLD_SIZE, y));
+        // 무한 월드 - 클램프 없음
 
         const enemy = EnemyRegistry.create(enemyKey, x, y);
         if (!enemy) return;
@@ -98,8 +97,7 @@ export class SpawnSystem {
         let x = player.x + Math.cos(angle) * radius;
         let y = player.y + Math.sin(angle) * radius;
 
-        x = Math.max(0, Math.min(WORLD_SIZE, x));
-        y = Math.max(0, Math.min(WORLD_SIZE, y));
+        // 무한 월드 - 클램프 없음
 
         const boss = EnemyRegistry.create(bossKey, x, y);
         if (!boss) return;
@@ -117,8 +115,7 @@ export class SpawnSystem {
         let x = player.x + Math.cos(angle) * distance;
         let y = player.y + Math.sin(angle) * distance;
 
-        x = Math.max(0, Math.min(WORLD_SIZE, x));
-        y = Math.max(0, Math.min(WORLD_SIZE, y));
+        // 무한 월드 - 클램프 없음
 
         const weaponKeys = WeaponRegistry.keys();
         if (weaponKeys.length === 0) return;
@@ -138,8 +135,7 @@ export class SpawnSystem {
         let x = player.x + Math.cos(angle) * distance;
         let y = player.y + Math.sin(angle) * distance;
 
-        x = Math.max(0, Math.min(WORLD_SIZE, x));
-        y = Math.max(0, Math.min(WORLD_SIZE, y));
+        // 무한 월드 - 클램프 없음
 
         const equipKeys = EquipmentRegistry.keys();
         if (equipKeys.length === 0) return;

@@ -5,11 +5,11 @@ import { AreaEffect } from '../entities/projectiles/AreaEffect.js';
 export class Firebomb extends Weapon {
     constructor() {
         super({
-            name: '화염병',
+            name: '장난감 폭탄',
             damage: 15,
             cooldown: 2800,
             spriteKey: 'firebomb',
-            description: '플레이어 근처에 화염 지대를 생성합니다.',
+            description: '장난감 폭탄으로 주변에 폭발 영역을 만듭니다!',
         });
 
         this.areaRadius = 65;
@@ -38,6 +38,7 @@ export class Firebomb extends Weapon {
                 tickInterval: this.tickInterval,
                 color: this.color,
                 owner: game.player,
+                spriteKey: 'toyBombEffect',
             });
 
             game.projectiles.push(area);
@@ -49,24 +50,24 @@ export class Firebomb extends Weapon {
             case 2:
                 this.damage = 22;
                 this.areaRadius = 80;
-                this.description = '데미지 증가, 범위 확장.';
+                this.description = '폭탄이 더 강력해집니다!';
                 break;
             case 3:
                 this.cooldown = 2200;
                 this.bombCount = 2;
-                this.description = '2개의 화염병을 던집니다!';
+                this.description = '장난감 폭탄 2개 투척!';
                 break;
             case 4:
                 this.areaRadius = 95;
                 this.areaDuration = 4000;
-                this.description = '넓은 범위, 오래 지속.';
+                this.description = '넓은 폭발 범위, 오래 지속!';
                 break;
             case 5:
                 this.bombCount = 3;
                 this.areaRadius = 110;
                 this.areaDuration = 5000;
                 this.damage = 30;
-                this.description = '3개의 거대 화염! 불바다!';
+                this.description = '3개의 거대 장난감 폭탄!';
                 break;
         }
     }

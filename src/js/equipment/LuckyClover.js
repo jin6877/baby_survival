@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class LuckyClover extends Equipment {
     constructor() {
         super({
-            name: '행운의 클로버',
+            name: '행운의 곰돌이',
             description: '경험치 획득 +25%',
-            icon: 'L',
+            icon: '🧸',
             color: '#66bb6a',
+            imageSrc: 'images/equipment_icons/equip_lucky_bear.png',
         });
         this.expBonus = 0.25;
     }

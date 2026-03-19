@@ -1,3 +1,4 @@
+// Bat → B형 독감: 빠른 지그재그 이동
 import { Enemy } from './Enemy.js';
 
 export class Bat extends Enemy {
@@ -6,8 +7,10 @@ export class Bat extends Enemy {
             hp: 8,
             speed: 3.5,
             damage: 3,
-            size: 16,
+            size: 56,
             spriteKey: 'bat',
+            effectSpriteKey: 'batEffect',
+            enemyName: 'B형 독감',
             exp: 1
         });
 

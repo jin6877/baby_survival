@@ -4,10 +4,11 @@ import { Equipment } from './Equipment.js';
 export class SwiftBoots extends Equipment {
     constructor() {
         super({
-            name: '민첩의 장화',
+            name: '아기 신발',
             description: '이동속도 +12%',
-            icon: 'B',
+            icon: '👟',
             color: '#4fc3f7',
+            imageSrc: 'images/equipment_icons/equip_shoes.png',
         });
         this.speedBonus = 0.12;
     }
