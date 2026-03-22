@@ -49,8 +49,8 @@ export class DropSystem {
             game.items.push(meat);
         }
 
-        // 0.2% 확률: 자석 드롭 (모든 아이템 흡수)
-        if (Math.random() < 0.002 + dropBonus * 0.001) {
+        // 0.002% 확률: 자석 드롭 (모든 아이템 흡수)
+        if (Math.random() < 0.00002 + dropBonus * 0.00001) {
             const magnet = new Magnet(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20);
             game.items.push(magnet);
         }

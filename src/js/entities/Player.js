@@ -30,7 +30,7 @@ export class Player extends Entity {
         this.speed = 1.5;
         this.level = 1;
         this.exp = 0;
-        this.expToNext = 8;
+        this.expToNext = 4;
 
         this.weapons = [];
         this.maxWeapons = 4;
@@ -302,7 +302,7 @@ export class Player extends Entity {
             this.exp -= this.expToNext;
             this.level++;
             // 초반 빠르고 후반 느린 커브: level^1.8 * 5
-            this.expToNext = Math.round(Math.pow(this.level, 1.8) * 5);
+            this.expToNext = Math.round(Math.pow(this.level, 1.8) * 2.5);
             this._pendingLevelUp = true;
         }
     }
@@ -420,7 +420,7 @@ export class Player extends Entity {
         // 레벨/경험치 리셋
         this.level = 1;
         this.exp = 0;
-        this.expToNext = 8;
+        this.expToNext = 4;
         this._pendingLevelUp = false;
 
         // HP 전체 회복
