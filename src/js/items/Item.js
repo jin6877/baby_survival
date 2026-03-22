@@ -58,13 +58,6 @@ export class Item extends Entity {
             return;
         }
 
-        // Glow effect
-        ctx.save();
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
-        ctx.shadowBlur = 4;
-
         super.render(ctx, camera);
-
-        ctx.restore();
     }
 }
