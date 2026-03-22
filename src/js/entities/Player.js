@@ -385,8 +385,13 @@ export class Player extends Entity {
     hasWeaponType(type) { return this.weapons.some(w => w instanceof type); }
     getWeaponOfType(type) { return this.weapons.find(w => w instanceof type) || null; }
 
-    // 라운드 전환 시 버프/장비/무기 초기화 (성장 레벨은 유지)
+    // 라운드 전환 시 모든 것 초기화
     resetForNewRound() {
+        // 성장 단계 초기화
+        this.growthLevel = 1;
+        this.growthKills = 0;
+        this.growthKillsToNext = LEVEL_UP_KILLS[1];
+
         // 무기 초기화
         this.weapons = [];
 

@@ -26,6 +26,9 @@ export class Enemy extends Entity {
         this.effectTimer = 0;
         this.showEffect = false;
         this.effectDuration = 0.4;
+
+        // 데미지 숫자 표시
+        this.damageNumbers = [];
     }
 
     update(dt, game) {
@@ -63,6 +66,16 @@ export class Enemy extends Entity {
             }
         }
 
+        // 데미지 숫자 업데이트
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const dn = this.damageNumbers[i];
+            dn.timer -= dt;
+            dn.offsetY -= 40 * dt; // 위로 떠오름
+            if (dn.timer <= 0) {
+                this.damageNumbers.splice(i, 1);
+            }
+        }
+
         // 넉백 중에는 이동하지 않음
         if (this.knockbackTimer > 0) return;
 
@@ -96,6 +109,14 @@ export class Enemy extends Entity {
         this.damageFlashTimer = this.damageFlashDuration;
         this.showEffect = true;
         this.effectTimer = 0;
+
+        // 데미지 숫자 팝업 추가
+        this.damageNumbers.push({
+            value: Math.round(amount),
+            timer: 0.6,
+            offsetX: (Math.random() - 0.5) * 20,
+            offsetY: 0,
+        });
 
         // Apply knockback
         if (knockbackAngle !== undefined) {
@@ -170,21 +191,21 @@ export class Enemy extends Entity {
             }
         }
 
-        // Draw HP bar if damaged
-        if (this.hp < this.maxHp) {
-            const barWidth = this.width;
-            const barHeight = 4;
-            const barX = screenX - barWidth / 2;
-            const barY = screenY - this.height / 2 - 8;
-            const hpRatio = this.hp / this.maxHp;
-
-            // Background
-            ctx.fillStyle = '#333';
-            ctx.fillRect(barX, barY, barWidth, barHeight);
-
-            // HP fill
-            ctx.fillStyle = hpRatio > 0.5 ? '#0f0' : hpRatio > 0.25 ? '#ff0' : '#f00';
-            ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
+        // 데미지 숫자 표시
+        for (const dn of this.damageNumbers) {
+            const alpha = Math.min(1, dn.timer / 0.3);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#ffeb3b';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const tx = screenX + dn.offsetX;
+            const ty = screenY - this.height / 2 + dn.offsetY;
+            ctx.strokeText(dn.value, tx, ty);
+            ctx.fillText(dn.value, tx, ty);
+            ctx.globalAlpha = 1;
         }
     }
 }
