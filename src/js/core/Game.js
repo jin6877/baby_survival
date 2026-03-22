@@ -286,6 +286,7 @@ export class Game {
         this.items = this.items.filter(i => i.alive);
         this.effects = this.effects.filter(e => e.alive);
 
+
         // Check game over
         if (this.player.hp <= 0) {
             this.state = 'gameover';
