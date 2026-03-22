@@ -32,16 +32,16 @@ export class SpawnSystem {
         this.spawnTimer -= dt * 1000;
         if (this.spawnTimer <= 0) {
             // 스폰 간격: 스테이지 + 경과 시간에 따라 빨라짐
-            // 1분마다 스폰 간격 15% 단축
+            // 1분마다 스폰 간격 20% 단축
             const stageSpeedUp = stageNumber === 1 ? 2.0 : Math.pow(0.88, stageNumber - 1);
-            const timeSpeedUp = 1 - elapsedMin * 0.15; // 0분: 1.0, 1분: 0.85, 2분: 0.7, 3분: 0.55, 4분: 0.4
-            const spawnInterval = this.baseSpawnInterval * stageSpeedUp * Math.max(0.3, timeSpeedUp);
+            const timeSpeedUp = 1 - elapsedMin * 0.20; // 0분: 1.0, 1분: 0.8, 2분: 0.6, 3분: 0.4, 4분: 0.2
+            const spawnInterval = this.baseSpawnInterval * stageSpeedUp * Math.max(0.2, timeSpeedUp);
             this.spawnTimer = spawnInterval;
 
             if (game.enemies.length < this.maxEnemies) {
-                // 동시 스폰 수: 1분마다 +1
+                // 동시 스폰 수: 1분마다 +2
                 let baseCount = stageNumber <= 2 ? 1 : Math.min(4, 1 + Math.floor(stageNumber / 2));
-                const bonusCount = elapsedMin; // 0분: +0, 1분: +1, 2분: +2, 3분: +3, 4분: +4
+                const bonusCount = elapsedMin * 2; // 0분: +0, 1분: +2, 2분: +4, 3분: +6, 4분: +8
                 const spawnCount = baseCount + bonusCount;
 
                 for (let s = 0; s < spawnCount; s++) {
@@ -83,8 +83,8 @@ export class SpawnSystem {
         else if (stageNumber === 2) hpMult = 1.5;
         else hpMult = 2 * Math.pow(1.5, stageNumber - 3);
 
-        // 1분마다 HP 20% 추가 증가
-        const timeHpBonus = 1 + elapsedMin * 0.2; // 0분: 1.0, 1분: 1.2, 2분: 1.4, 3분: 1.6, 4분: 1.8
+        // 1분마다 HP 40% 추가 증가
+        const timeHpBonus = 1 + elapsedMin * 0.4; // 0분: 1.0, 1분: 1.4, 2분: 1.8, 3분: 2.2, 4분: 2.6
 
         enemy.hp *= hpMult * timeHpBonus;
         enemy.maxHp = enemy.hp;

@@ -83,7 +83,7 @@ export default class HUD {
         ctx.font = 'bold 17px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`HP: ${Math.ceil(player.hp)}/${player.maxHp}`, x + w / 2, y + h / 2);
+        ctx.fillText(`HP: ${Math.ceil(player.hp)}/${Math.ceil(player.maxHp)}`, x + w / 2, y + h / 2);
     }
 
     renderGrowthBar(ctx) {
