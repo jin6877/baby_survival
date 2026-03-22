@@ -55,8 +55,8 @@ export class DropSystem {
             game.items.push(magnet);
         }
 
-        // 3% 확률: 폭탄 드롭
-        if (Math.random() < 0.03 + dropBonus * 0.01) {
+        // 0.03% 확률: 폭탄 드롭
+        if (Math.random() < 0.0003 + dropBonus * 0.0001) {
             const bomb = new Bomb(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20);
             game.items.push(bomb);
         }
