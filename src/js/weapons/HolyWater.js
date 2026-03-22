@@ -1,4 +1,4 @@
-// HolyWater: 성수 무기 - 강화 버전
+// HolyWater: 아빠 목소리 - 플레이어 주변 지속 범위 공격
 import { Weapon } from './Weapon.js';
 import { AreaEffect } from '../entities/projectiles/AreaEffect.js';
 
@@ -6,14 +6,14 @@ export class HolyWater extends Weapon {
     constructor() {
         super({
             name: '아빠 목소리',
-            damage: 8,
-            cooldown: 2500,
+            damage: 15,
+            cooldown: 2000,
             spriteKey: 'holyWater',
             description: '아빠의 우렁찬 목소리로 주변을 충격파로 공격합니다.',
         });
 
-        this.radius = 80;
-        this.effectDuration = 2500;
+        this.radius = 100;
+        this.effectDuration = 3000;
         this.leavesZone = false;
         this.zoneDuration = 3000;
     }
@@ -25,7 +25,7 @@ export class HolyWater extends Weapon {
             radius: this.radius,
             damage: this.getEffectiveDamage(game),
             duration: this.effectDuration,
-            tickInterval: 250,
+            tickInterval: 200,
             color: 'rgba(255, 160, 0, 0.4)',
             owner: game.player,
             followOwner: true,
@@ -39,7 +39,7 @@ export class HolyWater extends Weapon {
                 radius: this.radius * 0.8,
                 damage: this.getEffectiveDamage(game) * 0.5,
                 duration: this.zoneDuration,
-                tickInterval: 400,
+                tickInterval: 300,
                 color: 'rgba(255, 180, 50, 0.3)',
                 owner: null,
                 followOwner: false,
@@ -53,23 +53,27 @@ export class HolyWater extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = 12;
+                this.damage = 22;
+                this.radius = 120;
                 this.description = '아빠 목소리가 더 커집니다!';
                 break;
             case 3:
-                this.cooldown = 2000;
-                this.radius = 100;
+                this.damage = 30;
+                this.cooldown = 1600;
+                this.radius = 140;
                 this.description = '더 자주, 더 넓게 울려퍼집니다!';
                 break;
             case 4:
-                this.radius = 120;
-                this.effectDuration = 3000;
+                this.damage = 40;
+                this.radius = 160;
+                this.effectDuration = 4000;
                 this.description = '아빠 잔소리가 오래 지속됩니다!';
                 break;
             case 5:
-                this.radius = 150;
+                this.radius = 200;
                 this.leavesZone = true;
-                this.damage = 16;
+                this.damage = 50;
+                this.cooldown = 1200;
                 this.description = '아빠의 대포 목소리! 충격파 잔여!';
                 break;
         }

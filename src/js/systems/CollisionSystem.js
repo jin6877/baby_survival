@@ -23,7 +23,17 @@ export class CollisionSystem {
 
             if (player.collidesWith(enemy)) {
                 player.takeDamage(enemy.damage);
-                break; // Player becomes invincible after taking damage
+
+                // 적이 부딪힌 후 넉백 + 잠시 멈춤 (0.5초)
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const knockbackForce = 300;
+                enemy.knockbackX = (dx / dist) * knockbackForce;
+                enemy.knockbackY = (dy / dist) * knockbackForce;
+                enemy.knockbackTimer = 0.5;
+
+                break;
             }
         }
     }
@@ -40,6 +50,9 @@ export class CollisionSystem {
             // Skip AreaEffects - they handle their own damage
             if (proj.radius !== undefined && proj.dealDamage) continue;
 
+            // Skip visual-only effects (LightningEffect 등)
+            if (proj.isVisualEffect) continue;
+
             for (const enemy of enemies) {
                 if (!enemy.alive) continue;
 
@@ -53,15 +66,7 @@ export class CollisionSystem {
                         enemy.y - proj.y,
                         enemy.x - proj.x
                     );
-                    enemy.takeDamage(proj.damage, knockbackAngle);
-
-                    // Check if enemy died
-                    if (!enemy.alive || enemy.hp <= 0) {
-                        enemy.onDeath(game);
-                        if (game.player) {
-                            game.player.addKill();
-                        }
-                    }
+                    enemy.takeDamage(proj.damage, knockbackAngle, game);
 
                     if (proj.piercing) {
                         // Track hit enemy to avoid double-hit

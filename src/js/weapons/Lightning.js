@@ -6,16 +6,16 @@ export class Lightning extends Weapon {
     constructor() {
         super({
             name: '엄마 눈물',
-            damage: 30,
-            cooldown: 1800,
-            spriteKey: 'lightning',
+            damage: 40,
+            cooldown: 1100,
+            spriteKey: 'weaponMomTears',
             description: '엄마의 눈물이 적에게 즉발 데미지를 줍니다!',
         });
 
         this.strikeCount = 1;
         this.chainCount = 0;
         this.chainDamageRatio = 0.7;
-        this.chainRadius = 150;
+        this.chainRadius = 200;
     }
 
     attack(game) {
@@ -85,24 +85,29 @@ export class Lightning extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = 40;
-                this.description = '엄마 눈물이 더 아프게!';
+                this.damage = 55;
+                this.strikeCount = 2;
+                this.description = '엄마 눈물 2방! 더 아프게!';
                 break;
             case 3:
-                this.strikeCount = 2;
+                this.damage = 70;
+                this.strikeCount = 3;
                 this.chainCount = 1;
-                this.description = '2명에게 눈물 + 체인!';
+                this.cooldown = 900;
+                this.description = '3명에게 눈물 + 체인!';
                 break;
             case 4:
-                this.strikeCount = 3;
+                this.damage = 85;
+                this.strikeCount = 4;
                 this.chainCount = 2;
-                this.cooldown = 1400;
-                this.description = '3명 공격 + 체인 2회!';
+                this.cooldown = 700;
+                this.description = '4명 공격 + 체인 2회!';
                 break;
             case 5:
-                this.strikeCount = 4;
+                this.damage = 100;
+                this.strikeCount = 5;
                 this.chainCount = 3;
-                this.damage = 50;
+                this.cooldown = 550;
                 this.description = '엄마의 대폭발 눈물! 체인 3회!';
                 break;
         }

@@ -19,6 +19,20 @@ export class Item extends Entity {
         this.bobTime += dt;
         this.y = this.baseY + Math.sin(this.bobTime * 3 + this.bobOffset) * 3;
 
+        // 자석 흡수 효과: 모든 아이템을 플레이어에게 끌어당김
+        if (this._magnetPull && game.player && game.player.alive) {
+            const player = game.player;
+            const dx = player.x - this.x;
+            const dy = player.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0) {
+                const speed = 600 * dt;
+                this.x += (dx / dist) * speed;
+                this.y += (dy / dist) * speed;
+                this.baseY += (dy / dist) * speed;
+            }
+        }
+
         // Duration countdown (if duration > 0)
         if (this.duration > 0) {
             this.timer -= dt * 1000;
@@ -46,8 +60,8 @@ export class Item extends Entity {
 
         // Glow effect
         ctx.save();
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+        ctx.shadowBlur = 4;
 
         super.render(ctx, camera);
 

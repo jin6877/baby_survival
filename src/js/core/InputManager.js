@@ -105,7 +105,24 @@ export class InputManager {
                 return;
             }
 
-            // During gameplay: left half = joystick, right half = currently unused (auto-attack)
+            // 게임 플레이 중: HUD 슬롯 터치 체크 (툴팁 열기/닫기)
+            if (game.state === 'playing') {
+                // 툴팁이 열려있으면 아무 곳이나 터치하면 닫기
+                if (game.hud && game.hud.tooltip) {
+                    game.mouseX = pos.x;
+                    game.mouseY = pos.y;
+                    game.hud.handleClick(pos.x, pos.y);
+                    return;
+                }
+                // HUD 슬롯 클릭 체크
+                if (game.hud && game.hud.handleClick(pos.x, pos.y)) {
+                    game.mouseX = pos.x;
+                    game.mouseY = pos.y;
+                    return;
+                }
+            }
+
+            // 조이스틱 활성화
             if (!this.joystick.active) {
                 this.joystick.active = true;
                 this.joystick.touchId = touch.identifier;

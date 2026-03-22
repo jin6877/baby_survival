@@ -1,4 +1,4 @@
-// Firebomb: 화염병 무기 - 강화 버전
+// Firebomb: 장난감 폭탄 - 범위 지속 데미지 무기
 import { Weapon } from './Weapon.js';
 import { AreaEffect } from '../entities/projectiles/AreaEffect.js';
 
@@ -6,15 +6,15 @@ export class Firebomb extends Weapon {
     constructor() {
         super({
             name: '장난감 폭탄',
-            damage: 15,
-            cooldown: 2800,
+            damage: 18,
+            cooldown: 2500,
             spriteKey: 'firebomb',
             description: '장난감 폭탄으로 주변에 폭발 영역을 만듭니다!',
         });
 
-        this.areaRadius = 65;
+        this.areaRadius = 70;
         this.areaDuration = 3000;
-        this.tickInterval = 400;
+        this.tickInterval = 350;
         this.bombCount = 1;
         this.color = 'rgba(255, 109, 0, 0.3)';
     }
@@ -48,25 +48,28 @@ export class Firebomb extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = 22;
-                this.areaRadius = 80;
+                this.damage = 25;
+                this.areaRadius = 85;
                 this.description = '폭탄이 더 강력해집니다!';
                 break;
             case 3:
-                this.cooldown = 2200;
+                this.damage = 32;
+                this.cooldown = 2000;
                 this.bombCount = 2;
                 this.description = '장난감 폭탄 2개 투척!';
                 break;
             case 4:
-                this.areaRadius = 95;
+                this.damage = 40;
+                this.areaRadius = 100;
                 this.areaDuration = 4000;
                 this.description = '넓은 폭발 범위, 오래 지속!';
                 break;
             case 5:
                 this.bombCount = 3;
-                this.areaRadius = 110;
+                this.areaRadius = 120;
                 this.areaDuration = 5000;
-                this.damage = 30;
+                this.damage = 50;
+                this.cooldown = 1600;
                 this.description = '3개의 거대 장난감 폭탄!';
                 break;
         }

@@ -1,4 +1,4 @@
-// Garlic: 젖병 방어막 무기 - 이미지 기반 이펙트
+// Garlic: 젖병 방어막 - 근접 방어 + 넉백 무기
 import { Weapon } from './Weapon.js';
 import { assets } from '../core/AssetManager.js';
 
@@ -6,14 +6,14 @@ export class Garlic extends Weapon {
     constructor() {
         super({
             name: '젖병 방어막',
-            damage: 8,
-            cooldown: 1000,
+            damage: 15,
+            cooldown: 800,
             spriteKey: 'garlic',
             description: '젖병의 힘으로 주변 적을 밀어냅니다!',
         });
 
-        this.radius = 70;
-        this.knockbackForce = 6;
+        this.radius = 90;
+        this.knockbackForce = 10;
 
         this.pulseTimer = 0;
         this.pulseDuration = 300;
@@ -79,11 +79,9 @@ export class Garlic extends Weapon {
         ctx.globalAlpha = alpha;
 
         if (assets.hasSprite('bottleShieldEffect')) {
-            // 이미지 기반: 회전하는 방어막 이미지
             const shieldSize = currentRadius * 2.2;
             assets.drawSprite(ctx, 'bottleShieldEffect', screenX, screenY, shieldSize, shieldSize, this.shieldRotation);
 
-            // 추가 반투명 링 효과
             ctx.globalAlpha = alpha * 0.3;
             ctx.strokeStyle = 'rgba(255, 220, 180, 0.8)';
             ctx.lineWidth = 3;
@@ -91,7 +89,6 @@ export class Garlic extends Weapon {
             ctx.arc(screenX, screenY, currentRadius, 0, Math.PI * 2);
             ctx.stroke();
         } else {
-            // 폴백: 우유색 원
             ctx.fillStyle = 'rgba(255, 248, 230, 0.3)';
             ctx.beginPath();
             ctx.arc(screenX, screenY, currentRadius, 0, Math.PI * 2);
@@ -114,24 +111,26 @@ export class Garlic extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = 12;
-                this.radius = 85;
+                this.damage = 22;
+                this.radius = 110;
                 this.description = '방어막이 넓어집니다!';
                 break;
             case 3:
-                this.cooldown = 800;
-                this.knockbackForce = 8;
+                this.damage = 30;
+                this.cooldown = 600;
+                this.knockbackForce = 14;
                 this.description = '더 빠르고 강한 넉백!';
                 break;
             case 4:
-                this.radius = 110;
-                this.damage = 16;
+                this.radius = 140;
+                this.damage = 40;
                 this.description = '넓은 젖병 방어막!';
                 break;
             case 5:
-                this.radius = 140;
-                this.knockbackForce = 14;
-                this.damage = 22;
+                this.radius = 180;
+                this.knockbackForce = 20;
+                this.damage = 55;
+                this.cooldown = 500;
                 this.description = '거대한 젖병 방어막! 모두 밀어낸다!';
                 break;
         }

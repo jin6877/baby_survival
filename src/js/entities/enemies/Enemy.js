@@ -63,6 +63,9 @@ export class Enemy extends Entity {
             }
         }
 
+        // 넉백 중에는 이동하지 않음
+        if (this.knockbackTimer > 0) return;
+
         this.movementPattern(dt, game);
     }
 
@@ -79,8 +82,15 @@ export class Enemy extends Entity {
         }
     }
 
-    takeDamage(amount, knockbackAngle) {
+    takeDamage(amount, knockbackAngle, game) {
         if (!this.alive) return;
+        if (!amount || amount <= 0) return; // NaN/undefined/0 방어
+
+        // 일부 무기가 game을 두번째 인자로 넘기는 경우 처리
+        if (knockbackAngle && typeof knockbackAngle === 'object') {
+            game = knockbackAngle;
+            knockbackAngle = undefined;
+        }
 
         this.hp -= amount;
         this.damageFlashTimer = this.damageFlashDuration;
@@ -97,7 +107,14 @@ export class Enemy extends Entity {
 
         if (this.hp <= 0) {
             this.hp = 0;
-            this.alive = false;
+            if (game) {
+                this.onDeath(game);
+                if (game.player) {
+                    game.player.addKill();
+                }
+            } else {
+                this.alive = false;
+            }
         }
     }
 

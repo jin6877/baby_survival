@@ -10,7 +10,6 @@ import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { LevelUpSystem } from '../systems/LevelUpSystem.js';
 import { DropSystem } from '../systems/DropSystem.js';
 import { WeaponRegistry } from '../data/WeaponRegistry.js';
-import { Dagger } from '../weapons/Dagger.js';
 import HUD from '../ui/HUD.js';
 import StartScreen from '../ui/StartScreen.js';
 import GameOverScreen from '../ui/GameOverScreen.js';
@@ -142,7 +141,6 @@ export class Game {
     get boss() { return this.activeBoss && this.activeBoss.alive ? this.activeBoss : null; }
 
     startGame() {
-        this.state = 'playing';
         this.player = new Player(WORLD_SIZE / 2, WORLD_SIZE / 2);
         this.enemies = [];
         this.projectiles = [];
@@ -155,18 +153,16 @@ export class Game {
         this.magnetActive = false;
         this.paused = false;
 
-        // 기본 무기 지급
-        const dagger = new Dagger();
-        this.player.addWeapon(dagger);
-
-        // 첫 스테이지 시작
-        this._loadStage(0);
-
         // 시스템 리셋
         this.spawnSystem = new SpawnSystem(this);
         this.collisionSystem = new CollisionSystem(this);
         this.levelUpSystem = new LevelUpSystem(this);
         this.dropSystem = new DropSystem(this);
+
+        // 첫 스테이지 로드 후 무기 선택창 표시 (무기 3개만)
+        this._loadStage(0);
+        this.state = 'playing';
+        this.levelUpSystem.showChoices(true);
     }
 
     _loadStage(index) {
@@ -177,8 +173,6 @@ export class Game {
         this.stageIndex = index;
         this.currentStage = new Stage(STAGES[index]);
         this.spawnSystem.spawnTimer = 0;
-        this.spawnSystem.weaponSpawnTimer = 3000;
-        this.spawnSystem.equipmentSpawnTimer = 8000;
     }
 
     update(timestamp) {
@@ -195,8 +189,23 @@ export class Game {
         if (this.state === 'stageclear') {
             this.stageClearTimer -= dt;
             if (this.stageClearTimer <= 0) {
-                this._loadStage(this.stageIndex + 1);
+                const nextIndex = this.stageIndex + 1;
+                if (nextIndex >= STAGES.length) {
+                    this.state = 'victory';
+                    return;
+                }
+                // 라운드 전환: 버프/장비/무기 초기화
+                this.player.resetForNewRound();
+                this.enemies = [];
+                this.projectiles = [];
+                this.enemyBullets = [];
+                this.items = [];
+                this.effects = [];
+
+                // 다음 스테이지 로드 후 무기 선택창 표시 (무기 3개만)
+                this._loadStage(nextIndex);
                 this.state = 'playing';
+                this.levelUpSystem.showChoices(true);
             }
             return;
         }
@@ -218,13 +227,7 @@ export class Game {
             return;
         }
 
-        // Magnet timer
-        if (this.magnetActive) {
-            this.magnetTimer -= dt * 1000;
-            if (this.magnetTimer <= 0) {
-                this.magnetActive = false;
-            }
-        }
+        // (자석은 영구 버프로 변경됨 - 타이머 불필요)
 
         // Update player
         this.player.update(dt, this);
@@ -380,7 +383,7 @@ export class Game {
             ctx.font = '18px monospace';
             const nextStage = this.stageIndex + 2;
             if (nextStage <= STAGES.length) {
-                ctx.fillText(`다음 스테이지: ${nextStage}`, W / 2, H / 2 + 20);
+                ctx.fillText(`STAGE ${nextStage} 준비 중...`, W / 2, H / 2 + 20);
             }
         }
 
@@ -484,7 +487,7 @@ export class Game {
             return;
         }
 
-        // Delegate to click handler for UI interactions
+        // weaponselect, levelup, weaponswap 등 UI 상호작용
         this._handleClick();
     }
 
@@ -540,15 +543,29 @@ export class Game {
     _handleClick() {
         const W = this.canvasW;
         const H = this.canvasH;
+
+        // HUD 아이템 상세보기 닫기 (일시정지 상태에서도)
+        if (this.state === 'playing' && this.hud.tooltip) {
+            this.hud.handleClick(this.mouseX, this.mouseY);
+            return;
+        }
+
+        // HUD 슬롯 클릭 체크 (게임 플레이 중일 때)
+        if (this.state === 'playing' && !this.levelUpSystem.active && !this.weaponSwapUI.active) {
+            if (this.hud.handleClick(this.mouseX, this.mouseY)) {
+                return;
+            }
+        }
+
         // Level up selection by click/tap
         if (this.levelUpSystem.active) {
             const choices = this.levelUpSystem.choices;
-            const cardW = 220;
-            const cardH = 140;
+            const cardW = 230;
+            const cardH = 280;
             const cardPadding = 16;
             const totalW = choices.length * cardW + (choices.length - 1) * cardPadding;
             const startX = W / 2 - totalW / 2;
-            const cardY = H / 2 - cardH / 2;
+            const cardY = H / 2 - cardH / 2 + 10;
 
             for (let i = 0; i < choices.length; i++) {
                 const x = startX + i * (cardW + cardPadding);
@@ -604,7 +621,6 @@ export class Game {
     }
 
     activateMagnet() {
-        this.magnetActive = true;
-        this.magnetTimer = 500;
+        // 자석은 이제 장비로 동작 - 레거시 호환
     }
 }

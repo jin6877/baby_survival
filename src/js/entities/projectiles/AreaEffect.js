@@ -16,6 +16,8 @@ export class AreaEffect extends Entity {
         this.followOwner = config.followOwner || false;
         this.spriteKey = config.spriteKey || null;
 
+        this.isEnemyArea = config.isEnemyArea || false; // true면 플레이어에게 데미지
+
         this.elapsed = 0;
         this.tickTimer = 0;
         this.pulsePhase = 0;
@@ -49,6 +51,18 @@ export class AreaEffect extends Entity {
     }
 
     dealDamage(game) {
+        if (this.isEnemyArea) {
+            // 적이 만든 영역: 플레이어에게 데미지
+            if (!game.player || !game.player.alive || game.player.invincibleTimer > 0) return;
+            const dx = game.player.x - this.x;
+            const dy = game.player.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= this.radius) {
+                game.player.takeDamage(this.damage);
+            }
+            return;
+        }
+
         if (!game.enemies) return;
 
         for (const enemy of game.enemies) {

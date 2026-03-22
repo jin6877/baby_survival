@@ -10,15 +10,15 @@ import {
 
 // 성장 단계 정의
 const GROWTH_STAGES = [
-    { level: 1, name: '누워있는 아기', prefix: 'level1_baby_lying', hpBonus: 0, speed: 1.5, size: 90 },
-    { level: 2, name: '기는 아기', prefix: 'level2_baby_crawling', hpBonus: 20, speed: 2.0, size: 100 },
-    { level: 3, name: '일어서는 아기', prefix: 'level3_baby_wobble', hpBonus: 40, speed: 2.5, size: 110 },
-    { level: 4, name: '유치원생', prefix: 'level4_kindergartener', hpBonus: 60, speed: 3.2, size: 120 },
-    { level: 5, name: '초등학생', prefix: 'level5_elementary', hpBonus: 80, speed: 4.0, size: 130 },
+    { level: 1, name: '누워있는 아기', prefix: 'level1_baby_lying', hpBonus: 0, speed: 1.5, size: 64 },
+    { level: 2, name: '기는 아기', prefix: 'level2_baby_crawling', hpBonus: 20, speed: 2.0, size: 72 },
+    { level: 3, name: '일어서는 아기', prefix: 'level3_baby_wobble', hpBonus: 40, speed: 2.5, size: 80 },
+    { level: 4, name: '유치원생', prefix: 'level4_kindergartener', hpBonus: 60, speed: 3.2, size: 88 },
+    { level: 5, name: '초등학생', prefix: 'level5_elementary', hpBonus: 80, speed: 4.0, size: 96 },
 ];
 
-// 레벨업에 필요한 킬 수 (누적)
-const LEVEL_UP_KILLS = [0, 15, 50, 120, 250];
+// 레벨업에 필요한 킬 수 (누적) - 10배 어려운 성장
+const LEVEL_UP_KILLS = [0, 300, 1000, 2200, 4500];
 
 export class Player extends Entity {
     constructor(x, y) {
@@ -30,7 +30,7 @@ export class Player extends Entity {
         this.speed = 1.5;
         this.level = 1;
         this.exp = 0;
-        this.expToNext = 6;
+        this.expToNext = 8;
 
         this.weapons = [];
         this.maxWeapons = 4;
@@ -67,14 +67,24 @@ export class Player extends Entity {
         this.projectileSpeedMultiplier = 1;
         this.cooldownReduction = 0;
 
+        // 바닥 드롭 스탯 누적 (HUD 표시용)
+        this.dropStats = {
+            attack: 0,      // +% 공격력
+            speed: 0,        // +% 이동속도
+            attackSpeed: 0,  // +% 공격속도
+            maxHp: 0,        // +HP
+            projSize: 0,     // +% 투사체 크기
+        };
+
         // Invincibility
         this.invincibleTimer = 0;
 
         // Stats
         this.killCount = 0;
 
-        // Exp pickup
+        // Exp pickup & magnet
         this.expPickupRadius = EXP_PICKUP_RADIUS;
+        this.magnetLevel = 0;
 
         // Load sprites
         this._loadSprites();
@@ -245,6 +255,21 @@ export class Player extends Entity {
 
         ctx.globalAlpha = 1;
 
+        // 자석 범위 링 표시 (magnetLevel > 0일 때)
+        if (this.magnetLevel > 0) {
+            ctx.save();
+            const pulse = 0.15 + 0.1 * Math.sin(Date.now() * 0.003);
+            ctx.globalAlpha = pulse;
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.expPickupRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
         // Draw HP bar above the player
         const barWidth = this.width + 8;
         const barHeight = 4;
@@ -276,7 +301,8 @@ export class Player extends Entity {
         while (this.exp >= this.expToNext) {
             this.exp -= this.expToNext;
             this.level++;
-            this.expToNext = this.level * 3 + 3;
+            // 초반 빠르고 후반 느린 커브: level^1.8 * 5
+            this.expToNext = Math.round(Math.pow(this.level, 1.8) * 5);
             this._pendingLevelUp = true;
         }
     }
@@ -358,4 +384,47 @@ export class Player extends Entity {
     getEquipmentOfType(type) { return this.equipment.find(e => e instanceof type) || null; }
     hasWeaponType(type) { return this.weapons.some(w => w instanceof type); }
     getWeaponOfType(type) { return this.weapons.find(w => w instanceof type) || null; }
+
+    // 라운드 전환 시 버프/장비/무기 초기화 (성장 레벨은 유지)
+    resetForNewRound() {
+        // 무기 초기화
+        this.weapons = [];
+
+        // 장비 제거 (apply 효과 역전)
+        for (const eq of this.equipment) {
+            if (eq.remove) eq.remove(this);
+        }
+        this.equipment = [];
+
+        // 바닥 드롭 스탯 초기화
+        this.dropStats = { attack: 0, speed: 0, attackSpeed: 0, maxHp: 0, projSize: 0 };
+
+        // 스탯 리셋
+        this.attackMultiplier = 1;
+        this.speedMultiplier = 1;
+        this.attackSpeedMultiplier = 1;
+        this.projectileSizeMultiplier = 1;
+        this.projectileCountBonus = 0;
+        this.damageReduction = 0;
+        this.expMultiplier = 1;
+        this.hpRegen = 0;
+        this.knockbackMultiplier = 1;
+        this.dropRateBonus = 0;
+        this.projectileSpeedMultiplier = 1;
+        this.cooldownReduction = 0;
+
+        // 자석 리셋
+        this.expPickupRadius = EXP_PICKUP_RADIUS;
+        this.magnetLevel = 0;
+
+        // 레벨/경험치 리셋
+        this.level = 1;
+        this.exp = 0;
+        this.expToNext = 8;
+        this._pendingLevelUp = false;
+
+        // HP 전체 회복
+        this._applyGrowthStage();
+        this.hp = this.maxHp;
+    }
 }

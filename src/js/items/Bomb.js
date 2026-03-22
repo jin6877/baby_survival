@@ -10,11 +10,11 @@ export class Bomb extends Item {
     }
 
     onPickup(player, game) {
-        // Deal 100 damage to all living enemies
+        // Deal 100 damage to all living enemies (game 전달로 자동 드롭/킬카운트 처리)
         if (game.enemies) {
             for (const enemy of game.enemies) {
                 if (enemy.alive) {
-                    enemy.takeDamage(100);
+                    enemy.takeDamage(100, undefined, game);
                 }
             }
         }

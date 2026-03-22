@@ -1,23 +1,23 @@
-// SpawnSystem: 적 및 무기/장비 픽업 스폰 관리
-import { WeaponPickup } from '../items/WeaponPickup.js';
-import { EquipmentPickup } from '../items/EquipmentPickup.js';
+// SpawnSystem: 적 스폰 관리 - 1분마다 난이도 증가
 import { EnemyRegistry } from '../data/EnemyRegistry.js';
-import { WeaponRegistry } from '../data/WeaponRegistry.js';
-import { EquipmentRegistry } from '../data/EquipmentRegistry.js';
-// 무한 월드
 
 export class SpawnSystem {
     constructor(game) {
         this.game = game;
         this.spawnTimer = 0;
-        this.baseSpawnInterval = 1200; // 이전 2000 → 더 빠른 스폰
-        this.weaponSpawnTimer = 0;
-        this.equipmentSpawnTimer = 0;
+        this.baseSpawnInterval = 400;
     }
 
     get maxEnemies() {
         const stageNumber = this.game.currentStage ? this.game.currentStage.stageNumber : 1;
-        return 50 + stageNumber * 15; // 이전 30 + stageNumber * 12
+        return 180 + stageNumber * 60;
+    }
+
+    // 라운드 내 경과 분 수 (0분~5분)
+    _getElapsedMinutes() {
+        const stage = this.game.currentStage;
+        if (!stage) return 0;
+        return Math.floor(stage.elapsed / 60);
     }
 
     update(dt) {
@@ -26,17 +26,30 @@ export class SpawnSystem {
         if (!stage || !game.player || !game.player.alive) return;
 
         const stageNumber = stage.stageNumber || 1;
+        const elapsedMin = this._getElapsedMinutes(); // 0, 1, 2, 3, 4
 
         // --- Enemy spawning ---
         this.spawnTimer -= dt * 1000;
         if (this.spawnTimer <= 0) {
-            const spawnInterval = this.baseSpawnInterval * Math.pow(0.88, stageNumber - 1);
+            // 스폰 간격: 스테이지 + 경과 시간에 따라 빨라짐
+            // 1분마다 스폰 간격 15% 단축
+            const stageSpeedUp = stageNumber === 1 ? 2.0 : Math.pow(0.88, stageNumber - 1);
+            const timeSpeedUp = 1 - elapsedMin * 0.15; // 0분: 1.0, 1분: 0.85, 2분: 0.7, 3분: 0.55, 4분: 0.4
+            const spawnInterval = this.baseSpawnInterval * stageSpeedUp * Math.max(0.3, timeSpeedUp);
             this.spawnTimer = spawnInterval;
 
             if (game.enemies.length < this.maxEnemies) {
-                const enemyKey = this._weightedRandom(stage.spawnConfig);
-                if (enemyKey) {
-                    this.spawnEnemy(enemyKey, stageNumber);
+                // 동시 스폰 수: 1분마다 +1
+                let baseCount = stageNumber <= 2 ? 1 : Math.min(4, 1 + Math.floor(stageNumber / 2));
+                const bonusCount = elapsedMin; // 0분: +0, 1분: +1, 2분: +2, 3분: +3, 4분: +4
+                const spawnCount = baseCount + bonusCount;
+
+                for (let s = 0; s < spawnCount; s++) {
+                    if (game.enemies.length >= this.maxEnemies) break;
+                    const enemyKey = this._weightedRandom(stage.spawnConfig);
+                    if (enemyKey) {
+                        this.spawnEnemy(enemyKey, stageNumber, elapsedMin);
+                    }
                 }
             }
         }
@@ -49,22 +62,9 @@ export class SpawnSystem {
             }
         }
 
-        // --- Weapon pickup spawning (15~25초 간격) ---
-        this.weaponSpawnTimer -= dt * 1000;
-        if (this.weaponSpawnTimer <= 0) {
-            this.weaponSpawnTimer = 15000 + Math.random() * 10000;
-            this.spawnWeaponPickup();
-        }
-
-        // --- Equipment pickup spawning (20~35초 간격) ---
-        this.equipmentSpawnTimer -= dt * 1000;
-        if (this.equipmentSpawnTimer <= 0) {
-            this.equipmentSpawnTimer = 20000 + Math.random() * 15000;
-            this.spawnEquipmentPickup();
-        }
     }
 
-    spawnEnemy(enemyKey, stageNumber = 1) {
+    spawnEnemy(enemyKey, stageNumber = 1, elapsedMin = 0) {
         const game = this.game;
         const player = game.player;
         if (!player) return;
@@ -74,15 +74,21 @@ export class SpawnSystem {
         let x = player.x + Math.cos(angle) * radius;
         let y = player.y + Math.sin(angle) * radius;
 
-        // 무한 월드 - 클램프 없음
-
         const enemy = EnemyRegistry.create(enemyKey, x, y);
         if (!enemy) return;
 
-        // 스테이지 스탯 스케일링 (완화됨)
-        enemy.hp *= (1 + (stageNumber - 1) * 0.15);
+        // 스테이지 기본 스케일링
+        let hpMult;
+        if (stageNumber === 1) hpMult = 1;
+        else if (stageNumber === 2) hpMult = 1.5;
+        else hpMult = 2 * Math.pow(1.5, stageNumber - 3);
+
+        // 1분마다 HP 20% 추가 증가
+        const timeHpBonus = 1 + elapsedMin * 0.2; // 0분: 1.0, 1분: 1.2, 2분: 1.4, 3분: 1.6, 4분: 1.8
+
+        enemy.hp *= hpMult * timeHpBonus;
         enemy.maxHp = enemy.hp;
-        enemy.speed *= (1 + (stageNumber - 1) * 0.03);
+        enemy.speed *= (1 + (stageNumber - 1) * 0.06);
 
         game.enemies.push(enemy);
     }
@@ -97,52 +103,10 @@ export class SpawnSystem {
         let x = player.x + Math.cos(angle) * radius;
         let y = player.y + Math.sin(angle) * radius;
 
-        // 무한 월드 - 클램프 없음
-
         const boss = EnemyRegistry.create(bossKey, x, y);
         if (!boss) return;
 
         game.enemies.push(boss);
-    }
-
-    spawnWeaponPickup() {
-        const game = this.game;
-        const player = game.player;
-        if (!player) return;
-
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 150 + Math.random() * 200;
-        let x = player.x + Math.cos(angle) * distance;
-        let y = player.y + Math.sin(angle) * distance;
-
-        // 무한 월드 - 클램프 없음
-
-        const weaponKeys = WeaponRegistry.keys();
-        if (weaponKeys.length === 0) return;
-
-        const weaponKey = weaponKeys[Math.floor(Math.random() * weaponKeys.length)];
-        const pickup = new WeaponPickup(x, y, weaponKey);
-        game.items.push(pickup);
-    }
-
-    spawnEquipmentPickup() {
-        const game = this.game;
-        const player = game.player;
-        if (!player) return;
-
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 150 + Math.random() * 250;
-        let x = player.x + Math.cos(angle) * distance;
-        let y = player.y + Math.sin(angle) * distance;
-
-        // 무한 월드 - 클램프 없음
-
-        const equipKeys = EquipmentRegistry.keys();
-        if (equipKeys.length === 0) return;
-
-        const equipKey = equipKeys[Math.floor(Math.random() * equipKeys.length)];
-        const pickup = new EquipmentPickup(x, y, equipKey);
-        game.items.push(pickup);
     }
 
     _weightedRandom(spawnConfig) {

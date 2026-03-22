@@ -14,7 +14,7 @@ export const MAX_EQUIPMENT_LEVEL = 5;
 export const WEAPON_SPAWN_MIN = 15000;
 export const WEAPON_SPAWN_MAX = 25000;
 
-export const EXP_PICKUP_RADIUS = 80;
+export const EXP_PICKUP_RADIUS = 50;
 export const MAGNET_PICKUP_RADIUS = 500;
 
 export const COLORS = {

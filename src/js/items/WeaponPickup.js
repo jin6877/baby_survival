@@ -63,10 +63,10 @@ export class WeaponPickup extends Item {
 
         ctx.save();
         ctx.shadowColor = '#76ff03';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 6;
 
         // 배경 원
-        ctx.fillStyle = 'rgba(118, 255, 3, 0.7)';
+        ctx.fillStyle = 'rgba(118, 255, 3, 0.5)';
         ctx.beginPath();
         ctx.arc(screenX, screenY, this.width / 2, 0, Math.PI * 2);
         ctx.fill();
@@ -93,9 +93,12 @@ export class WeaponPickup extends Item {
         const weaponData = WeaponRegistry.get(this.weaponKey);
         const name = weaponData ? weaponData.name : this.weaponKey;
 
-        ctx.fillStyle = '#76ff03';
-        ctx.font = 'bold 13px monospace';
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 14px monospace';
         ctx.textAlign = 'center';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.strokeText(name, screenX, screenY + this.height / 2 + 14);
         ctx.fillText(name, screenX, screenY + this.height / 2 + 14);
     }
 }

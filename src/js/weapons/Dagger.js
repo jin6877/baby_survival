@@ -1,4 +1,4 @@
-// Dagger: 기본 단검 무기
+// Dagger: 엄마 손 - 빠른 연사 + 다수 투사체 무기
 import { Weapon } from './Weapon.js';
 import { Projectile } from '../entities/projectiles/Projectile.js';
 
@@ -6,8 +6,8 @@ export class Dagger extends Weapon {
     constructor() {
         super({
             name: '엄마 손',
-            damage: 15,
-            cooldown: 800,
+            damage: 20,
+            cooldown: 600,
             spriteKey: 'dagger',
             description: '가장 가까운 적에게 엄마 손을 날립니다.',
         });
@@ -53,11 +53,12 @@ export class Dagger extends Weapon {
                 angle += offset;
             }
 
+            const sizeMult = game.player ? game.player.projectileSizeMultiplier : 1;
             const proj = new Projectile(px, py, {
-                speed: 6,
+                speed: 7,
                 damage: this.getEffectiveDamage(game),
                 spriteKey: 'daggerProjectile',
-                size: 40,
+                size: Math.round(30 * sizeMult),
                 piercing: this.piercing,
                 owner: game.player,
             });
@@ -72,22 +73,27 @@ export class Dagger extends Weapon {
     onUpgrade() {
         switch (this.level) {
             case 2:
-                this.damage = Math.round(15 * 1.3);
-                this.description = '엄마 손이 더 아파집니다!';
-                break;
-            case 3:
-                this.cooldown = 800 * 0.75;
-                this.description = '엄마 손이 더 빨라집니다!';
-                break;
-            case 4:
+                this.damage = 28;
                 this.projectileCount = 2;
                 this.spread = 0.15;
                 this.description = '양손으로 때립니다!';
                 break;
-            case 5:
+            case 3:
+                this.damage = 35;
+                this.cooldown = 450;
+                this.description = '더 빠르게! 더 아프게!';
+                break;
+            case 4:
                 this.projectileCount = 3;
+                this.spread = 0.2;
                 this.piercing = true;
-                this.description = '관통하는 엄마의 분노!';
+                this.description = '3연타 관통 엄마 손!';
+                break;
+            case 5:
+                this.projectileCount = 5;
+                this.damage = 45;
+                this.cooldown = 350;
+                this.description = '엄마의 분노! 5연타!';
                 break;
         }
     }

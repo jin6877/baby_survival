@@ -58,7 +58,7 @@ export class EquipmentPickup extends Item {
 
         ctx.save();
         ctx.shadowColor = color;
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 6;
 
         // 배경 원
         ctx.fillStyle = color;
@@ -84,9 +84,12 @@ export class EquipmentPickup extends Item {
 
         // 이름 표시
         const name = equipData ? equipData.name : this.equipmentKey;
-        ctx.fillStyle = color;
-        ctx.font = 'bold 13px monospace';
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 14px monospace';
         ctx.textAlign = 'center';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.strokeText(name, screenX, screenY + this.height / 2 + 14);
         ctx.fillText(name, screenX, screenY + this.height / 2 + 14);
     }
 }
