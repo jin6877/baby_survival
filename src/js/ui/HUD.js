@@ -182,7 +182,8 @@ export default class HUD {
             // 바닥 드롭 수치 (+ 없이, 절대 수치)
             let valueText = '';
             if (s.dropVal > 0) {
-                valueText = `${s.dropVal}`;
+                const dv = Number.isInteger(s.dropVal) ? s.dropVal : +s.dropVal.toFixed(1);
+                valueText = `${dv}`;
             }
 
             // 장비 보너스 (+X)

@@ -2,11 +2,11 @@ import { Item } from './Item.js';
 
 // 바닥에 드롭되는 스탯 증가 아이템 (무한 중첩)
 const STAT_TYPES = [
-    { type: 'attack', name: '공격력', color: '#ff5252', icon: '⚔', apply(player) { player.attackMultiplier += 0.02; player.dropStats.attack += 2; } },
-    { type: 'speed', name: '이속', color: '#69f0ae', icon: '👟', apply(player) { player.speedMultiplier += 0.01; player.dropStats.speed += 1; } },
-    { type: 'attackSpeed', name: '공속', color: '#ffab40', icon: '⚡', apply(player) { player.attackSpeedMultiplier += 0.01; player.dropStats.attackSpeed += 1; } },
-    { type: 'maxHp', name: 'HP', color: '#ef5350', icon: '❤', apply(player) { player.maxHp += 2; player.hp += 2; player.dropStats.maxHp += 2; } },
-    { type: 'projSize', name: '투사체', color: '#7c4dff', icon: '🔮', apply(player) { player.projectileSizeMultiplier += 0.01; player.dropStats.projSize += 1; } },
+    { type: 'attack', name: '공격력', color: '#ff5252', icon: '⚔', apply(player) { player.attackMultiplier += 0.002; player.dropStats.attack += 0.2; } },
+    { type: 'speed', name: '이속', color: '#69f0ae', icon: '👟', apply(player) { player.speedMultiplier += 0.001; player.dropStats.speed += 0.1; } },
+    { type: 'attackSpeed', name: '공속', color: '#ffab40', icon: '⚡', apply(player) { player.attackSpeedMultiplier += 0.001; player.dropStats.attackSpeed += 0.1; } },
+    { type: 'maxHp', name: 'HP', color: '#ef5350', icon: '❤', apply(player) { player.maxHp += 0.2; player.hp += 0.2; player.dropStats.maxHp += 0.2; } },
+    { type: 'projSize', name: '투사체', color: '#7c4dff', icon: '🔮', apply(player) { player.projectileSizeMultiplier += 0.001; player.dropStats.projSize += 0.1; } },
 ];
 
 export class StatGem extends Item {
