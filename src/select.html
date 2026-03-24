@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Baby Survival - 아기 선택</title>
+    <link rel="stylesheet" href="css/common.css" />
+    <style>
+        body { overflow: auto; }
+        .start-options {
+            margin-top: 16px;
+            display: none;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .start-options.show { display: flex; }
+        .start-options .btn { max-width: 200px; font-size: 16px; padding: 12px; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-title" style="font-size: 32px;">아기 선택</div>
+        <div class="page-subtitle">플레이할 아기를 선택하세요</div>
+
+        <div class="baby-list" id="babyList">
+            <div class="empty-message">불러오는 중...</div>
+        </div>
+
+        <div class="start-options" id="startOptions">
+            <button class="btn btn-primary" id="btnContinue">이어하기 (Stage <span id="continueStage"></span>)</button>
+            <button class="btn btn-secondary" id="btnNewGame">처음부터 시작</button>
+        </div>
+
+        <a href="/" class="btn btn-back">돌아가기</a>
+    </div>
+
+    <script>
+        const list = document.getElementById('babyList');
+        const startOptions = document.getElementById('startOptions');
+        const btnNewGame = document.getElementById('btnNewGame');
+        const btnContinue = document.getElementById('btnContinue');
+        const continueStageSpan = document.getElementById('continueStage');
+
+        let babies = [];
+        let selectedId = null;
+
+        async function loadBabies() {
+            const res = await fetch('/api/babies');
+            const data = await res.json();
+            babies = data.babies || [];
+            render();
+        }
+
+        function render() {
+            list.innerHTML = '';
+
+            if (babies.length === 0) {
+                list.innerHTML = '<div class="empty-message">등록된 아기가 없습니다.<br><a href="/register" style="color:#4fc3f7;">아기 등록하러 가기</a></div>';
+                startOptions.classList.remove('show');
+                return;
+            }
+
+            babies.forEach(baby => {
+                const item = document.createElement('div');
+                item.className = 'baby-list-item';
+                if (baby.id === selectedId) {
+                    item.style.borderColor = '#4fc3f7';
+                    item.style.background = 'rgba(79, 195, 247, 0.2)';
+                }
+
+                const growthNames = ['누워있는 아기', '기는 아기', '일어서는 아기', '유치원생', '초등학생'];
+                const growthLv = (baby.stats && baby.stats.growthLevel) || 1;
+                const growthName = growthNames[growthLv - 1] || growthNames[0];
+                const totalKills = (baby.stats && baby.stats.killCount) || 0;
+                const stageText = baby.maxStage > 1
+                    ? 'Stage ' + baby.maxStage + ' | ' + growthName + ' | ' + totalKills + '킬'
+                    : '새로운 모험';
+
+                item.innerHTML = `
+                    <div class="avatar">
+                        <img src="images/character/level1_baby_lying_front_b7f79d.png" alt="baby"
+                             onerror="this.style.display='none'; this.parentElement.textContent='👶';" />
+                    </div>
+                    <div class="info">
+                        <div class="name">${baby.name}</div>
+                        <div class="stage">${stageText}</div>
+                    </div>
+                    <button class="delete-btn" data-id="${baby.id}" title="삭제">✕</button>
+                `;
+
+                item.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-btn')) return;
+                    selectedId = baby.id;
+                    render();
+                    showStartOptions(baby);
+                });
+
+                const delBtn = item.querySelector('.delete-btn');
+                delBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(baby.name + '을(를) 삭제하시겠습니까?')) {
+                        await fetch('/api/babies/' + baby.id, { method: 'DELETE' });
+                        if (selectedId === baby.id) {
+                            selectedId = null;
+                            startOptions.classList.remove('show');
+                        }
+                        await loadBabies();
+                    }
+                });
+
+                list.appendChild(item);
+            });
+        }
+
+        function showStartOptions(baby) {
+            startOptions.classList.add('show');
+            continueStageSpan.textContent = baby.maxStage || 1;
+        }
+
+        async function startGame(stageIndex) {
+            if (!selectedId) return;
+            await fetch('/api/active/' + selectedId, { method: 'PUT' });
+            window.location.href = '/game?stage=' + stageIndex;
+        }
+
+        btnNewGame.addEventListener('click', () => startGame(0));
+        btnContinue.addEventListener('click', () => {
+            const baby = babies.find(b => b.id === selectedId);
+            if (baby) startGame((baby.maxStage || 1) - 1);
+        });
+
+        loadBabies();
+    </script>
+</body>
+</html>

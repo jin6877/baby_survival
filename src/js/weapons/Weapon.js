@@ -48,7 +48,11 @@ export class Weapon {
     }
 
     getEffectiveDamage(game) {
-        const mult = game && game.player ? game.player.attackMultiplier : 1;
-        return this.damage * mult;
+        const player = game && game.player;
+        const playerAttack = player ? player.attackPower : 0;
+        const baseDamage = playerAttack + this.damage;
+        // 아이템(장비) 공격력 퍼센트 보너스 적용
+        const pctBonus = player ? (player.attackPowerPct || 0) : 0;
+        return baseDamage * (1 + pctBonus);
     }
 }

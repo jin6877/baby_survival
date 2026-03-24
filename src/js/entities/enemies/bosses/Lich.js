@@ -120,7 +120,7 @@ export class Lich extends Boss {
             hp: 800,
             speed: 1.3,
             damage: 15,
-            size: 116,
+            size: 88,
             spriteKey: 'lich',
             effectSpriteKey: 'lichEffect',
             enemyName: '아이스크림',

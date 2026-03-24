@@ -10,7 +10,7 @@ export class VampireLord extends Boss {
             hp: 1500,
             speed: 1.5,
             damage: 20,
-            size: 140,
+            size: 100,
             spriteKey: 'vampireLord',
             effectSpriteKey: 'vampireLordEffect',
             enemyName: '낡은 TV',

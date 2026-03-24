@@ -8,7 +8,7 @@ export class Ghost extends Enemy {
             hp: 15,
             speed: 2,
             damage: 10,
-            size: 60,
+            size: 44,
             spriteKey: 'ghost',
             effectSpriteKey: 'ghostEffect',
             enemyName: '감기 바이러스',

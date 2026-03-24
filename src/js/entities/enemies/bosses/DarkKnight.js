@@ -8,7 +8,7 @@ export class DarkKnight extends Boss {
             hp: 600,
             speed: 1.5,
             damage: 20,
-            size: 120,
+            size: 90,
             spriteKey: 'darkKnight',
             effectSpriteKey: 'darkKnightEffect',
             enemyName: '스마트폰',

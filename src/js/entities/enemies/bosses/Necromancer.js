@@ -10,7 +10,7 @@ export class Necromancer extends Boss {
             hp: 500,
             speed: 1.2,
             damage: 10,
-            size: 116,
+            size: 88,
             spriteKey: 'necromancer',
             effectSpriteKey: 'necromancerEffect',
             enemyName: '사탕 괴물',

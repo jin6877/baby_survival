@@ -89,7 +89,7 @@ export class AreaEffect extends Entity {
             return;
         }
 
-        const pulse = 0.5 + Math.sin(this.pulsePhase) * 0.15;
+        const pulse = 0.35;
         const fadeRatio = 1 - (this.elapsed / this.duration);
 
         ctx.save();
@@ -116,14 +116,14 @@ export class AreaEffect extends Entity {
             ctx.fill();
 
             // 테두리
-            ctx.globalAlpha = (0.6 + Math.sin(this.pulsePhase) * 0.2) * fadeRatio;
+            ctx.globalAlpha = 0.4 * fadeRatio;
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 3;
             ctx.stroke();
 
             // 내부 펄스 링
-            ctx.globalAlpha = 0.3 * fadeRatio;
-            const innerRadius = this.radius * (0.3 + Math.sin(this.pulsePhase * 1.5) * 0.2);
+            ctx.globalAlpha = 0.25 * fadeRatio;
+            const innerRadius = this.radius * 0.4;
             ctx.beginPath();
             ctx.arc(screenX, screenY, innerRadius, 0, Math.PI * 2);
             ctx.stroke();

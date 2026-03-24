@@ -8,7 +8,7 @@ export class Knight extends Enemy {
             hp: 80,
             speed: 1,
             damage: 15,
-            size: 80,
+            size: 60,
             spriteKey: 'knight',
             effectSpriteKey: 'knightEffect',
             enemyName: '충치균',

@@ -7,7 +7,7 @@ export class Bat extends Enemy {
             hp: 8,
             speed: 3.5,
             damage: 3,
-            size: 56,
+            size: 42,
             spriteKey: 'bat',
             effectSpriteKey: 'batEffect',
             enemyName: 'B형 독감',

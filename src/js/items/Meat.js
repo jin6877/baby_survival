@@ -4,7 +4,7 @@ export class Meat extends Item {
     constructor(x, y) {
         super(x, y, {
             spriteKey: 'meat',
-            size: 48,
+            size: 36,
             duration: 15000,
         });
     }

@@ -1,29 +1,28 @@
-// Armor: 갑옷 - 받는 데미지 감소
+// Armor: 갑옷 - 받는 데미지 퍼센트 감소
 import { Equipment } from './Equipment.js';
 
 export class Armor extends Equipment {
     constructor() {
         super({
             name: '아기 헬멧',
-            description: '받는 데미지 -15%',
+            description: '받는 데미지 -10%',
             icon: '⛑',
             color: '#78909c',
             imageSrc: 'images/equipment_icons/equip_helmet.png',
         });
-        this.reduction = 0.15;
+        this.pctBonus = 0.10;
     }
 
     apply(player) {
-        player.damageReduction += this.reduction;
+        player.damageReductionPct = (player.damageReductionPct || 0) + this.pctBonus;
     }
 
     remove(player) {
-        player.damageReduction -= this.reduction;
+        player.damageReductionPct = (player.damageReductionPct || 0) - this.pctBonus;
     }
 
     onLevelUp() {
-        this.reduction = 0.15 + (this.level - 1) * 0.10;
-        const percent = Math.round(this.reduction * 100);
-        this.description = `받는 데미지 -${percent}%`;
+        this.pctBonus = 0.10 * this.level;
+        this.description = `받는 데미지 -${Math.round(this.pctBonus * 100)}%`;
     }
 }

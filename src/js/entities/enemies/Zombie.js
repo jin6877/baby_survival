@@ -4,7 +4,7 @@ import { Enemy } from './Enemy.js';
 export class Zombie extends Enemy {
     constructor(x, y, isMini = false) {
         const hp = isMini ? 8 : 20;
-        const size = isMini ? 36 : 64;
+        const size = isMini ? 28 : 48;
         const speed = isMini ? 1.8 : 1.2;
         const damage = isMini ? 3 : 5;
         const exp = isMini ? 1 : 1;

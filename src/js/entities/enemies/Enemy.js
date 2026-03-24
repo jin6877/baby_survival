@@ -29,10 +29,31 @@ export class Enemy extends Entity {
 
         // 데미지 숫자 표시
         this.damageNumbers = [];
+
+        // 사망 애니메이션
+        this.dying = false;
+        this.deathTimer = 0;
+        this.deathDuration = 0.25;
     }
 
     update(dt, game) {
         if (!this.alive) return;
+
+        // 사망 애니메이션 중
+        if (this.dying) {
+            this.deathTimer += dt;
+            // 데미지 숫자도 계속 업데이트
+            for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+                const dn = this.damageNumbers[i];
+                dn.timer -= dt;
+                dn.offsetY -= 40 * dt;
+                if (dn.timer <= 0) this.damageNumbers.splice(i, 1);
+            }
+            if (this.deathTimer >= this.deathDuration) {
+                this.alive = false;
+            }
+            return;
+        }
 
         // Apply knockback decay
         if (this.knockbackTimer > 0) {
@@ -96,7 +117,7 @@ export class Enemy extends Entity {
     }
 
     takeDamage(amount, knockbackAngle, game) {
-        if (!this.alive) return;
+        if (!this.alive || this.dying) return;
         if (!amount || amount <= 0) return; // NaN/undefined/0 방어
 
         // 일부 무기가 game을 두번째 인자로 넘기는 경우 처리
@@ -143,7 +164,8 @@ export class Enemy extends Entity {
         if (game.dropSystem) {
             game.dropSystem.handleDrop(this);
         }
-        this.alive = false;
+        this.dying = true;
+        this.deathTimer = 0;
     }
 
     render(ctx, camera) {
@@ -158,18 +180,28 @@ export class Enemy extends Entity {
             return;
         }
 
+        ctx.save();
+
+        // 사망 애니메이션: 축소 + 페이드 + 빨갛게
+        if (this.dying) {
+            const progress = this.deathTimer / this.deathDuration;
+            const scale = 1 - progress * 0.6; // 1.0 → 0.4로 축소
+            ctx.globalAlpha = 1 - progress;
+            ctx.translate(screenX, screenY);
+            ctx.scale(scale, scale);
+            ctx.translate(-screenX, -screenY);
+        }
+
         // Damage flash effect
         if (this.damageFlashTimer > 0) {
-            ctx.globalAlpha = this.opacity;
-            ctx.save();
-            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = Math.max(ctx.globalAlpha || 1, 0) * this.opacity;
         }
 
         // Draw sprite
         super.render(ctx, camera);
 
-        // Damage flash overlay
-        if (this.damageFlashTimer > 0) {
+        // Damage flash overlay (흰색 번쩍)
+        if (this.damageFlashTimer > 0 && !this.dying) {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.fillRect(
                 screenX - this.width / 2,
@@ -177,8 +209,22 @@ export class Enemy extends Entity {
                 this.width,
                 this.height
             );
-            ctx.restore();
         }
+
+        // 사망 시 빨간 틴트
+        if (this.dying) {
+            const progress = this.deathTimer / this.deathDuration;
+            ctx.globalAlpha = (1 - progress) * 0.5;
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(
+                screenX - this.width / 2,
+                screenY - this.height / 2,
+                this.width,
+                this.height
+            );
+        }
+
+        ctx.restore();
 
         // 피격 이펙트 렌더링
         if (this.showEffect && this.effectSpriteKey) {

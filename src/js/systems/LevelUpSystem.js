@@ -5,28 +5,28 @@ import { EquipmentRegistry } from '../data/EquipmentRegistry.js';
 // 장비 스탯 공식 (레벨별 수치 계산, 절대 수치)
 const EQUIP_FORMULAS = {
     armor: [
-        { label: '피해감소', fn: lv => Math.round((0.15 + (lv - 1) * 0.10) * 100), format: 'flat' },
+        { label: '피해감소', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     attackRing: [
-        { label: '공격력', fn: lv => Math.round((0.15 + (lv - 1) * 0.10) * 100), format: 'flat' },
+        { label: '공격력', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     swiftBoots: [
-        { label: '이동속도', fn: lv => Math.round((0.12 + (lv - 1) * 0.08) * 100), format: 'flat' },
+        { label: '이동속도', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     timeClock: [
-        { label: '공격속도', fn: lv => Math.round((0.08 + (lv - 1) * 0.06) * 100), format: 'flat' },
+        { label: '공격속도', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     sharpshooterGlass: [
-        { label: '투사체크기', fn: lv => Math.round((0.15 + (lv - 1) * 0.10) * 100), format: 'flat' },
+        { label: '투사체크기', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     luckyClover: [
-        { label: '경험치', fn: lv => Math.round((0.25 + (lv - 1) * 0.15) * 100), format: 'flat' },
+        { label: '경험치', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     magnetAmulet: [
-        { label: '흡수범위', fn: lv => 20 + (lv - 1) * 15, format: 'flat' },
+        { label: '흡수범위', fn: lv => (lv * 10) + '%', format: 'flat' },
     ],
     lifeNecklace: [
-        { label: '최대HP', fn: lv => 20 + (lv - 1) * 15, format: 'flat' },
+        { label: '최대HP', fn: lv => (lv * 10) + '%', format: 'flat' },
         { label: '재생', fn: lv => +(0.5 + (lv - 1) * 0.3).toFixed(1), format: 'decimal' },
     ],
 };

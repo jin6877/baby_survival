@@ -1,15 +1,40 @@
 import { Item } from './Item.js';
 
+// 5단계 경험치 젬 (보라색 다이아몬드, 투명도로 등급 구분)
+const GEM_TIERS = [
+    { tier: 1, exp: 1, alpha: 0.35, size: 5 },    // 가장 연함 - 흔함
+    { tier: 2, exp: 1, alpha: 0.50, size: 6 },
+    { tier: 3, exp: 1, alpha: 0.65, size: 7 },
+    { tier: 4, exp: 2, alpha: 0.80, size: 9 },
+    { tier: 5, exp: 3, alpha: 1.0, size: 11 },    // 가장 진함 - 희귀
+];
+
+// 드롭 가중치 (높을수록 자주 나옴)
+const GEM_WEIGHTS = [50, 28, 14, 6, 2]; // 총 100
+const WEIGHT_SUM = GEM_WEIGHTS.reduce((a, b) => a + b, 0);
+
+export function rollGemTier() {
+    let roll = Math.random() * WEIGHT_SUM;
+    for (let i = 0; i < GEM_WEIGHTS.length; i++) {
+        roll -= GEM_WEIGHTS[i];
+        if (roll <= 0) return i;
+    }
+    return 0;
+}
+
 export class ExpGem extends Item {
-    constructor(x, y, large = false) {
+    constructor(x, y, tierIndex = 0) {
+        const tier = GEM_TIERS[tierIndex] || GEM_TIERS[0];
         super(x, y, {
-            spriteKey: large ? 'expGemLarge' : 'expGemSmall',
-            size: large ? 44 : 32,
+            spriteKey: null,
+            size: tier.size * 2 + 4,
             duration: 0, // 영구 존재
         });
 
-        this.expValue = large ? 3 : 1;
-        this.large = large;
+        this.tierIndex = tierIndex;
+        this.expValue = tier.exp;
+        this.gemAlpha = tier.alpha;
+        this.gemSize = tier.size;
         this.pullSpeed = 0;
     }
 
@@ -21,7 +46,7 @@ export class ExpGem extends Item {
 
         const dx = player.x - this.x;
         const dy = player.y - this.y;
-        const distSq = dx * dx + dy * dy; // sqrt 생략으로 성능 향상
+        const distSq = dx * dx + dy * dy;
 
         // 전체획득 자석 효과
         if (this._magnetPull && distSq > 0) {
@@ -33,7 +58,7 @@ export class ExpGem extends Item {
             return;
         }
 
-        // 화면에서 멀면 update 스킵 (bob 애니메이션도 불필요)
+        // 화면에서 멀면 update 스킵
         if (distSq > 800 * 800) return;
 
         // bob 애니메이션
@@ -78,18 +103,28 @@ export class ExpGem extends Item {
             return;
         }
 
-        // 끌려가는 중이면 간단한 글로우만
-        if (this.pullSpeed > 10) {
-            ctx.save();
-            ctx.globalAlpha = 0.4;
-            ctx.fillStyle = this.large ? '#e040fb' : '#7c4dff';
-            ctx.beginPath();
-            ctx.arc(screenX, screenY, this.width / 2 + 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
+        // 보라색 다이아몬드 - 투명도로 등급 구분
+        ctx.save();
+        const size = this.gemSize;
+        const baseAlpha = this.gemAlpha;
+        const pulse = 0.85 + Math.sin((this.bobTime || 0) * 4) * 0.15;
 
-        // 기본 렌더링
-        super.render(ctx, camera);
+        ctx.globalAlpha = baseAlpha * pulse;
+        ctx.fillStyle = '#7c4dff';
+        ctx.beginPath();
+        ctx.moveTo(screenX, screenY - size);
+        ctx.lineTo(screenX + size * 0.7, screenY);
+        ctx.lineTo(screenX, screenY + size);
+        ctx.lineTo(screenX - size * 0.7, screenY);
+        ctx.closePath();
+        ctx.fill();
+
+        // 글로우 (높은 등급일수록 선명)
+        ctx.globalAlpha = 0.25 * baseAlpha * pulse;
+        ctx.strokeStyle = '#b388ff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.restore();
     }
 }

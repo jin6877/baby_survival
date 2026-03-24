@@ -19,7 +19,7 @@ export class CollisionSystem {
         if (player.invincibleTimer > 0) return;
 
         for (const enemy of game.enemies) {
-            if (!enemy.alive) continue;
+            if (!enemy.alive || enemy.dying) continue;
 
             if (player.collidesWith(enemy)) {
                 player.takeDamage(enemy.damage);
@@ -54,7 +54,7 @@ export class CollisionSystem {
             if (proj.isVisualEffect) continue;
 
             for (const enemy of enemies) {
-                if (!enemy.alive) continue;
+                if (!enemy.alive || enemy.dying) continue;
 
                 // Skip already-hit enemies for piercing projectiles
                 if (proj.piercing && proj.hitEntities && proj.hitEntities.has(enemy)) {

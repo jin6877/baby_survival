@@ -4,7 +4,7 @@ export const WORLD_SIZE = 3000;
 
 export const PLAYER_BASE_HP = 100;
 export const PLAYER_BASE_SPEED = 3;
-export const PLAYER_SIZE = 64;
+export const PLAYER_SIZE = 48;
 export const PLAYER_INVINCIBLE_TIME = 500;
 
 export const MAX_WEAPONS = 4;

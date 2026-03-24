@@ -7,7 +7,7 @@ export class Skeleton extends Enemy {
             hp: 35,
             speed: 1.5,
             damage: 12,
-            size: 68,
+            size: 52,
             spriteKey: 'skeleton',
             effectSpriteKey: 'skeletonEffect',
             enemyName: 'A형 독감',

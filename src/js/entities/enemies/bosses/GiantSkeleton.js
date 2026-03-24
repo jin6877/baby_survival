@@ -8,7 +8,7 @@ export class GiantSkeleton extends Boss {
             hp: 300,
             speed: 0.8,
             damage: 12,
-            size: 120,
+            size: 90,
             spriteKey: 'giantSkeleton',
             effectSpriteKey: 'giantSkeletonEffect',
             enemyName: '과자 봉지',

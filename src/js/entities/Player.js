@@ -10,24 +10,34 @@ import {
 
 // 성장 단계 정의
 const GROWTH_STAGES = [
-    { level: 1, name: '누워있는 아기', prefix: 'level1_baby_lying', hpBonus: 0, speed: 1.5, size: 64 },
-    { level: 2, name: '기는 아기', prefix: 'level2_baby_crawling', hpBonus: 20, speed: 2.0, size: 72 },
-    { level: 3, name: '일어서는 아기', prefix: 'level3_baby_wobble', hpBonus: 40, speed: 2.5, size: 80 },
-    { level: 4, name: '유치원생', prefix: 'level4_kindergartener', hpBonus: 60, speed: 3.2, size: 88 },
-    { level: 5, name: '초등학생', prefix: 'level5_elementary', hpBonus: 80, speed: 4.0, size: 96 },
+    { level: 1, name: '누워있는 아기', prefix: 'level1_baby_lying', hpBonus: 0, speed: 1.5, size: 48 },
+    { level: 2, name: '기는 아기', prefix: 'level2_baby_crawling', hpBonus: 20, speed: 2.0, size: 54 },
+    { level: 3, name: '일어서는 아기', prefix: 'level3_baby_wobble', hpBonus: 40, speed: 2.5, size: 60 },
+    { level: 4, name: '유치원생', prefix: 'level4_kindergartener', hpBonus: 60, speed: 3.2, size: 66 },
+    { level: 5, name: '초등학생', prefix: 'level5_elementary', hpBonus: 80, speed: 4.0, size: 72 },
 ];
 
-// 레벨업에 필요한 킬 수 (누적) - 10배 어려운 성장
-const LEVEL_UP_KILLS = [0, 300, 1000, 2200, 4500];
+// 성장에 필요한 성장 포인트 (누적) - StatGem 수집으로 획득
+// 3% 드롭률 × ~500킬/라운드 = ~15개/라운드 → 5라운드에 ~75개
+const GROWTH_POINTS_REQUIRED = [0, 25, 58, 100, 158];
 
 export class Player extends Entity {
     constructor(x, y) {
         super(x, y, PLAYER_SIZE, PLAYER_SIZE, 'player');
 
-        this.baseHp = 80;
+        // 아기 기본 스탯 (캐릭터 선택 시 달라질 수 있음)
+        this.baseStats = {
+            hp: 80,
+            attack: 5,
+            speed: 1.5,
+            defense: 0,
+        };
+
+        this.baseHp = this.baseStats.hp;
         this.hp = this.baseHp;
         this.maxHp = this.baseHp;
-        this.speed = 1.5;
+        this.attackPower = this.baseStats.attack;
+        this.speed = this.baseStats.speed;
         this.level = 1;
         this.exp = 0;
         this.expToNext = 4;
@@ -38,10 +48,14 @@ export class Player extends Entity {
         this.equipment = [];
         this.maxEquipment = MAX_EQUIPMENT;
 
+        // Baby identity
+        this.babyName = '아기';
+        this.babyType = 0;
+
         // Growth stage (character level)
         this.growthLevel = 1;
-        this.growthKills = 0; // 성장 레벨용 킬 카운트
-        this.growthKillsToNext = LEVEL_UP_KILLS[1];
+        this.growthPoints = 0; // 성장 포인트 (StatGem 수집)
+        this.growthPointsToNext = GROWTH_POINTS_REQUIRED[1];
 
         // Sprite animation
         this.direction = 'front'; // front, back, left, right
@@ -52,14 +66,15 @@ export class Player extends Entity {
         this.spriteImages = {}; // loaded images cache
 
         // Upgrade multipliers
-        this.attackMultiplier = 1;
         this.speedMultiplier = 1;
         this.attackSpeedMultiplier = 1;
         this.projectileSizeMultiplier = 1;
         this.projectileCountBonus = 0;
 
         // Equipment-based stats
-        this.damageReduction = 0;
+        this.defense = 0;
+        this.attackPowerPct = 0;    // 아이템 공격력% 보너스
+        this.damageReductionPct = 0; // 아이템 피해감소%
         this.expMultiplier = 1;
         this.hpRegen = 0;
         this.knockbackMultiplier = 1;
@@ -67,13 +82,17 @@ export class Player extends Entity {
         this.projectileSpeedMultiplier = 1;
         this.cooldownReduction = 0;
 
-        // 바닥 드롭 스탯 누적 (HUD 표시용)
+        // 영구 드롭 스탯 (체력, 공격력만 — 저장됨)
         this.dropStats = {
-            attack: 0,      // +% 공격력
-            speed: 0,        // +% 이동속도
-            attackSpeed: 0,  // +% 공격속도
-            maxHp: 0,        // +HP
-            projSize: 0,     // +% 투사체 크기
+            attack: 0,      // + 공격력
+            maxHp: 0,        // + HP
+        };
+
+        // 스테이지 드롭 스탯 (스테이지 시작 시 초기화)
+        this.stageStats = {
+            speed: 0,
+            attackSpeed: 0,
+            defense: 0,
         };
 
         // Invincibility
@@ -140,7 +159,7 @@ export class Player extends Entity {
 
     _applyGrowthStage() {
         const stage = this._getStageConfig();
-        this.maxHp = this.baseHp + stage.hpBonus;
+        this.maxHp = this.baseHp + stage.hpBonus + (this.dropStats.maxHp || 0);
         this.speed = stage.speed;
         this.width = stage.size;
         this.height = stage.size;
@@ -245,9 +264,23 @@ export class Player extends Entity {
         const img = spriteKey ? this.spriteImages[spriteKey] : null;
         if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, screenX - this.width / 2, screenY - this.height / 2, this.width, this.height);
+            // 캐릭터 색 틴트 (babyType > 0)
+            if (this.babyType > 0) {
+                const tintColors = ['', '#f48fb1', '#81c784', '#ffb74d'];
+                const tint = tintColors[this.babyType];
+                if (tint) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.25;
+                    ctx.globalCompositeOperation = 'source-atop';
+                    ctx.fillStyle = tint;
+                    ctx.fillRect(screenX - this.width / 2, screenY - this.height / 2, this.width, this.height);
+                    ctx.restore();
+                }
+            }
         } else {
             // Fallback
-            ctx.fillStyle = '#4fc3f7';
+            const fallbackColors = ['#4fc3f7', '#f48fb1', '#81c784', '#ffb74d'];
+            ctx.fillStyle = fallbackColors[this.babyType || 0] || '#4fc3f7';
             ctx.beginPath();
             ctx.arc(screenX, screenY, this.width / 2, 0, Math.PI * 2);
             ctx.fill();
@@ -286,8 +319,11 @@ export class Player extends Entity {
     takeDamage(amount) {
         if (this.invincibleTimer > 0) return false;
 
-        const reducedAmount = amount * (1 - Math.min(0.8, this.damageReduction));
-        this.hp -= reducedAmount;
+        // 방어력(수치) 감소 후 아이템(%) 감소
+        let finalDamage = Math.max(1, amount - (this.defense || 0));
+        finalDamage *= (1 - Math.min(0.8, this.damageReductionPct || 0));
+        finalDamage = Math.max(1, finalDamage);
+        this.hp -= finalDamage;
         if (this.hp < 0) this.hp = 0;
 
         this.invincibleTimer = PLAYER_INVINCIBLE_TIME / 1000;
@@ -309,33 +345,37 @@ export class Player extends Entity {
 
     addKill() {
         this.killCount++;
-        this.growthKills++;
+    }
+
+    addGrowthPoints(amount) {
+        if (this.growthLevel >= GROWTH_STAGES.length) return;
+        this.growthPoints += amount;
         this._checkGrowthLevelUp();
     }
 
     _checkGrowthLevelUp() {
         if (this.growthLevel >= GROWTH_STAGES.length) return;
 
-        const nextKills = LEVEL_UP_KILLS[this.growthLevel];
-        if (nextKills !== undefined && this.growthKills >= nextKills) {
+        const nextPoints = GROWTH_POINTS_REQUIRED[this.growthLevel];
+        if (nextPoints !== undefined && this.growthPoints >= nextPoints) {
             this.growthLevel++;
             this._applyGrowthStage();
             // 레벨업 보너스: 체력 전체 회복
             this.hp = this.maxHp;
-            // 다음 레벨 킬 목표 설정
+            // 다음 레벨 목표 설정
             if (this.growthLevel < GROWTH_STAGES.length) {
-                this.growthKillsToNext = LEVEL_UP_KILLS[this.growthLevel];
+                this.growthPointsToNext = GROWTH_POINTS_REQUIRED[this.growthLevel];
             } else {
-                this.growthKillsToNext = this.growthKills; // max
+                this.growthPointsToNext = this.growthPoints; // max
             }
         }
     }
 
     getGrowthProgress() {
         if (this.growthLevel >= GROWTH_STAGES.length) return 1;
-        const currentThreshold = this.growthLevel > 1 ? LEVEL_UP_KILLS[this.growthLevel - 1] : 0;
-        const nextThreshold = LEVEL_UP_KILLS[this.growthLevel];
-        const progress = (this.growthKills - currentThreshold) / (nextThreshold - currentThreshold);
+        const currentThreshold = this.growthLevel > 1 ? GROWTH_POINTS_REQUIRED[this.growthLevel - 1] : 0;
+        const nextThreshold = GROWTH_POINTS_REQUIRED[this.growthLevel];
+        const progress = (this.growthPoints - currentThreshold) / (nextThreshold - currentThreshold);
         return Math.min(1, Math.max(0, progress));
     }
 
@@ -387,10 +427,7 @@ export class Player extends Entity {
 
     // 라운드 전환 시 모든 것 초기화
     resetForNewRound() {
-        // 성장 단계 초기화
-        this.growthLevel = 1;
-        this.growthKills = 0;
-        this.growthKillsToNext = LEVEL_UP_KILLS[1];
+        // 성장 단계 & 킬 카운트 & 바닥 드롭 스탯은 유지 (영구)
 
         // 무기 초기화
         this.weapons = [];
@@ -401,22 +438,24 @@ export class Player extends Entity {
         }
         this.equipment = [];
 
-        // 바닥 드롭 스탯 초기화
-        this.dropStats = { attack: 0, speed: 0, attackSpeed: 0, maxHp: 0, projSize: 0 };
-
-        // 스탯 리셋
-        this.attackMultiplier = 1;
-        this.speedMultiplier = 1;
-        this.attackSpeedMultiplier = 1;
-        this.projectileSizeMultiplier = 1;
+        // 모든 스테이지 스탯 초기화
+        this.stageStats = { speed: 0, attackSpeed: 0, defense: 0 };
         this.projectileCountBonus = 0;
-        this.damageReduction = 0;
         this.expMultiplier = 1;
         this.hpRegen = 0;
         this.knockbackMultiplier = 1;
         this.dropRateBonus = 0;
         this.projectileSpeedMultiplier = 1;
         this.cooldownReduction = 0;
+        this.defense = 0;
+        this.attackPowerPct = 0;
+        this.damageReductionPct = 0;
+
+        // 영구 스탯만 복원 (공격력, 체력)
+        this.attackPower = this.baseStats.attack + this.dropStats.attack;
+        this.speedMultiplier = 1;
+        this.attackSpeedMultiplier = 1;
+        this.projectileSizeMultiplier = 1;
 
         // 자석 리셋
         this.expPickupRadius = EXP_PICKUP_RADIUS;
@@ -428,7 +467,46 @@ export class Player extends Entity {
         this.expToNext = 4;
         this._pendingLevelUp = false;
 
-        // HP 전체 회복
+        // HP: 성장 단계 + 드롭 스탯 기반 복원
+        this._applyGrowthStage();
+        this.hp = this.maxHp;
+    }
+
+    // 영구 스탯 데이터 (저장용 — 공격력, 체력만)
+    getPermanentStats() {
+        return {
+            growthLevel: this.growthLevel,
+            growthPoints: this.growthPoints,
+            killCount: this.killCount,
+            dropStats: {
+                attack: this.dropStats.attack,
+                maxHp: this.dropStats.maxHp,
+            },
+        };
+    }
+
+    // 영구 스탯 복원 (로드용)
+    loadPermanentStats(stats) {
+        if (!stats) return;
+        this.growthLevel = stats.growthLevel || 1;
+        this.growthPoints = stats.growthPoints || 0;
+        this.killCount = stats.killCount || 0;
+
+        if (stats.dropStats) {
+            this.dropStats = {
+                attack: stats.dropStats.attack || 0,
+                maxHp: stats.dropStats.maxHp || 0,
+            };
+            // 영구 스탯 적용
+            this.attackPower = this.baseStats.attack + this.dropStats.attack;
+        }
+
+        // 성장 단계 적용
+        if (this.growthLevel < GROWTH_STAGES.length) {
+            this.growthPointsToNext = GROWTH_POINTS_REQUIRED[this.growthLevel];
+        } else {
+            this.growthPointsToNext = this.growthPoints;
+        }
         this._applyGrowthStage();
         this.hp = this.maxHp;
     }

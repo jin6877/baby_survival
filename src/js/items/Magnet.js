@@ -4,7 +4,7 @@ export class Magnet extends Item {
     constructor(x, y) {
         super(x, y, {
             spriteKey: 'magnet',
-            size: 44,
+            size: 32,
             duration: 10000,
         });
     }

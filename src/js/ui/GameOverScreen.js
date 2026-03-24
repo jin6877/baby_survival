@@ -1,3 +1,5 @@
+import { SaveSystem } from '../core/SaveSystem.js';
+
 export default class GameOverScreen {
     constructor(game) {
         this.game = game;
@@ -8,6 +10,13 @@ export default class GameOverScreen {
     show() {
         this.active = true;
         this.blinkTimer = 0;
+
+        // 현재 스테이지 + 영구 스탯 저장
+        const stage = this.game.stage || 1;
+        SaveSystem.updateMaxStage(stage);
+        if (this.game.player) {
+            SaveSystem.saveStats(this.game.player.getPermanentStats());
+        }
     }
 
     render(ctx, W, H) {
@@ -31,6 +40,7 @@ export default class GameOverScreen {
         ctx.fillText('GAME OVER', centerX, centerY - 100);
         ctx.restore();
 
+        const babyName = this.game.babyName || '아기';
         const stage = this.game.stage || 1;
         const kills = this.game.killCount || 0;
         const elapsedMs = this.game.elapsedTime || 0;
@@ -42,9 +52,12 @@ export default class GameOverScreen {
 
         ctx.fillStyle = '#e0e0e0';
         ctx.font = '16px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         const lineH = 28;
-        let y = centerY - 30;
+        let y = centerY - 40;
 
+        ctx.fillText(`${babyName}`, centerX, y); y += lineH;
         ctx.fillText(`도달 스테이지: ${stage}`, centerX, y); y += lineH;
         ctx.fillText(`처치 수: ${kills}`, centerX, y); y += lineH;
         ctx.fillText(`플레이 시간: ${timeStr}`, centerX, y); y += lineH;

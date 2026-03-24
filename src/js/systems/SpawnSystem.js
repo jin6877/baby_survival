@@ -84,11 +84,24 @@ export class SpawnSystem {
         else hpMult = 2 * Math.pow(1.5, stageNumber - 3);
 
         // 1분마다 HP 40% 추가 증가
-        const timeHpBonus = 1 + elapsedMin * 0.4; // 0분: 1.0, 1분: 1.4, 2분: 1.8, 3분: 2.2, 4분: 2.6
+        const timeHpBonus = 1 + elapsedMin * 0.4;
 
-        enemy.hp *= hpMult * timeHpBonus;
+        // 플레이어 영구 스탯에 비례한 몬스터 강화
+        let permBonus = 1;
+        if (player) {
+            // 성장 레벨당 +30% HP
+            permBonus += (player.growthLevel - 1) * 0.3;
+            // 공격력 드롭스탯당 +1% HP (공격력 0.2당 1개 = 5개당 1%)
+            permBonus += (player.dropStats.attack || 0) * 0.01;
+        }
+
+        enemy.hp *= hpMult * timeHpBonus * permBonus;
         enemy.maxHp = enemy.hp;
-        enemy.speed *= (1 + (stageNumber - 1) * 0.06);
+
+        // 속도: 초반 느리게, 1분마다 15% 증가
+        const baseSpeedMult = 0.7;
+        const timeSpeedBonus = baseSpeedMult + elapsedMin * 0.15;
+        enemy.speed *= timeSpeedBonus * (1 + (stageNumber - 1) * 0.06);
 
         game.enemies.push(enemy);
     }

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Baby Survival - 아기 등록</title>
+    <link rel="stylesheet" href="css/common.css" />
+    <style>
+        body { overflow: auto; }
+        .baby-card { width: 130px; }
+        .card-stats {
+            margin-top: 8px;
+            text-align: left;
+            font-size: 11px;
+            color: #b0bec5;
+        }
+        .stat-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 0;
+        }
+        .stat-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .stat-val {
+            margin-left: auto;
+            color: #fff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-title" style="font-size: 32px;">아기 등록</div>
+        <div class="page-subtitle">캐릭터를 선택하고 이름을 지어주세요</div>
+
+        <div class="card-grid" id="cardGrid"></div>
+
+        <div class="input-group">
+            <label for="babyName">아기 이름</label>
+            <input type="text" id="babyName" class="input-field"
+                   placeholder="이름을 입력하세요" maxlength="8" autocomplete="off" />
+        </div>
+
+        <button class="btn btn-primary" id="btnRegister" disabled>등록하기</button>
+        <a href="/" class="btn btn-back">돌아가기</a>
+    </div>
+
+    <script>
+        const BABY_TYPES = [
+            { id: 0, label: '아기', available: true, img: 'images/character/level1_baby_lying_front_b7f79d.png',
+              stats: { hp: 80, attack: 5, speed: 1.5, defense: 0 } },
+            { id: 1, label: 'Coming Soon', available: false },
+            { id: 2, label: 'Coming Soon', available: false },
+            { id: 3, label: 'Coming Soon', available: false },
+        ];
+
+        let selectedType = -1;
+        const grid = document.getElementById('cardGrid');
+        const nameInput = document.getElementById('babyName');
+        const btnRegister = document.getElementById('btnRegister');
+
+        BABY_TYPES.forEach((baby) => {
+            const card = document.createElement('div');
+            card.className = 'baby-card' + (baby.available ? '' : ' disabled');
+            let statsHtml = '';
+            if (baby.available && baby.stats) {
+                const s = baby.stats;
+                statsHtml = `<div class="card-stats">
+                    <div class="stat-row"><span class="stat-dot" style="background:#ff5252"></span>공격력 <span class="stat-val">${s.attack}</span></div>
+                    <div class="stat-row"><span class="stat-dot" style="background:#ef5350"></span>체력 <span class="stat-val">${s.hp}</span></div>
+                    <div class="stat-row"><span class="stat-dot" style="background:#69f0ae"></span>이동속도 <span class="stat-val">${s.speed}</span></div>
+                    <div class="stat-row"><span class="stat-dot" style="background:#78909c"></span>방어력 <span class="stat-val">${s.defense}</span></div>
+                </div>`;
+            }
+            card.innerHTML = `
+                <div class="preview">
+                    ${baby.available && baby.img
+                        ? '<img src="' + baby.img + '" alt="baby" />'
+                        : '<span class="coming-soon-icon">?</span>'}
+                </div>
+                <div class="card-label">${baby.label}</div>
+                ${statsHtml}
+            `;
+            if (baby.available) {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.baby-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedType = baby.id;
+                    updateBtn();
+                });
+            }
+            grid.appendChild(card);
+        });
+
+        const firstCard = grid.querySelector('.baby-card:not(.disabled)');
+        if (firstCard) firstCard.click();
+
+        nameInput.addEventListener('input', updateBtn);
+
+        function updateBtn() {
+            btnRegister.disabled = !(selectedType >= 0 && nameInput.value.trim().length > 0);
+        }
+
+        btnRegister.addEventListener('click', async () => {
+            if (btnRegister.disabled) return;
+            btnRegister.disabled = true;
+            btnRegister.textContent = '등록 중...';
+
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            await fetch('/api/babies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, babyType: selectedType }),
+            });
+
+            window.location.href = '/select';
+        });
+    </script>
+</body>
+</html>

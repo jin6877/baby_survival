@@ -8,7 +8,7 @@ export class Slime extends Enemy {
             hp: 30,
             speed: 2.5,
             damage: 25,
-            size: 60,
+            size: 44,
             spriteKey: 'slime',
             enemyName: '장염균',
             exp: 2

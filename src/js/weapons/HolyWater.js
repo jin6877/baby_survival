@@ -16,6 +16,7 @@ export class HolyWater extends Weapon {
         this.effectDuration = 3000;
         this.leavesZone = false;
         this.zoneDuration = 3000;
+        this.tickRate = 50; // 빠른 틱 간격
     }
 
     attack(game) {
@@ -23,9 +24,9 @@ export class HolyWater extends Weapon {
 
         const effect = new AreaEffect(game.player.x, game.player.y, {
             radius: this.radius,
-            damage: this.getEffectiveDamage(game),
+            damage: this.getEffectiveDamage(game) * 0.1,
             duration: this.effectDuration,
-            tickInterval: 200,
+            tickInterval: this.tickRate,
             color: 'rgba(255, 160, 0, 0.4)',
             owner: game.player,
             followOwner: true,
@@ -37,9 +38,9 @@ export class HolyWater extends Weapon {
         if (this.leavesZone) {
             const zoneEffect = new AreaEffect(game.player.x, game.player.y, {
                 radius: this.radius * 0.8,
-                damage: this.getEffectiveDamage(game) * 0.5,
+                damage: this.getEffectiveDamage(game) * 0.05,
                 duration: this.zoneDuration,
-                tickInterval: 300,
+                tickInterval: this.tickRate,
                 color: 'rgba(255, 180, 50, 0.3)',
                 owner: null,
                 followOwner: false,

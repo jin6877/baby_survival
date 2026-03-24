@@ -1,28 +1,14 @@
 import { Item } from './Item.js';
 
-// 바닥에 드롭되는 스탯 증가 아이템 (무한 중첩)
-const STAT_TYPES = [
-    { type: 'attack', name: '공격력', color: '#ff5252', icon: '⚔', perm: true, apply(player) { player.attackPower += 0.2; player.dropStats.attack += 0.2; } },
-    { type: 'speed', name: '이속', color: '#69f0ae', icon: '👟', perm: false, apply(player) { player.speedMultiplier += 0.005; player.stageStats.speed += 0.005; } },
-    { type: 'attackSpeed', name: '공속', color: '#ffab40', icon: '⚡', perm: false, apply(player) { player.attackSpeedMultiplier += 0.005; player.stageStats.attackSpeed += 0.005; } },
-    { type: 'maxHp', name: 'HP', color: '#ef5350', icon: '❤', perm: true, apply(player) { player.maxHp += 0.2; player.hp += 0.2; player.dropStats.maxHp += 0.2; } },
-];
-
-export class StatGem extends Item {
+// 성장경험치젬: 아기 성장 단계를 올리는 전용 젬
+export class GrowthGem extends Item {
     constructor(x, y) {
         super(x, y, {
             spriteKey: null,
-            size: 18,
+            size: 20,
             duration: 30000, // 30초 후 소멸
         });
 
-        // 랜덤 스탯 선택
-        const stat = STAT_TYPES[Math.floor(Math.random() * STAT_TYPES.length)];
-        this.statType = stat.type;
-        this.statName = stat.name;
-        this.statColor = stat.color;
-        this.statIcon = stat.icon;
-        this._applyFn = stat.apply;
         this.pullSpeed = 0;
     }
 
@@ -59,7 +45,7 @@ export class StatGem extends Item {
         if (distSq > 800 * 800) return;
 
         this.bobTime += dt;
-        this.y = this.baseY + Math.sin(this.bobTime * 4 + this.bobOffset) * 2;
+        this.y = this.baseY + Math.sin(this.bobTime * 3 + this.bobOffset) * 3;
 
         const pullRadius = player.expPickupRadius || 50;
 
@@ -76,7 +62,7 @@ export class StatGem extends Item {
     }
 
     onPickup(player, game) {
-        this._applyFn(player);
+        player.addGrowthPoints(1);
     }
 
     render(ctx, camera) {
@@ -90,26 +76,24 @@ export class StatGem extends Item {
             return;
         }
 
-        // 둥근 4각 별 모양 (원래 ExpGem 표창 디자인)
+        // 주황색 다이아몬드 (성장 전용)
         ctx.save();
         const size = 10;
-        const pulse = 0.8 + Math.sin(this.bobTime * 5) * 0.2;
+        const pulse = 0.85 + Math.sin((this.bobTime || 0) * 4) * 0.15;
 
         ctx.globalAlpha = pulse;
-        ctx.fillStyle = this.statColor;
+        ctx.fillStyle = '#ff9800'; // 주황색
         ctx.beginPath();
-        // 4방향 둥근 별: 베지어 커브로 부드러운 표창
         ctx.moveTo(screenX, screenY - size);
-        ctx.quadraticCurveTo(screenX + size * 0.3, screenY - size * 0.3, screenX + size, screenY);
-        ctx.quadraticCurveTo(screenX + size * 0.3, screenY + size * 0.3, screenX, screenY + size);
-        ctx.quadraticCurveTo(screenX - size * 0.3, screenY + size * 0.3, screenX - size, screenY);
-        ctx.quadraticCurveTo(screenX - size * 0.3, screenY - size * 0.3, screenX, screenY - size);
+        ctx.lineTo(screenX + size * 0.7, screenY);
+        ctx.lineTo(screenX, screenY + size);
+        ctx.lineTo(screenX - size * 0.7, screenY);
         ctx.closePath();
         ctx.fill();
 
-        // 테두리
-        ctx.globalAlpha = 0.4 * pulse;
-        ctx.strokeStyle = this.statColor;
+        // 글로우 테두리
+        ctx.globalAlpha = 0.3 * pulse;
+        ctx.strokeStyle = '#ffb74d';
         ctx.lineWidth = 2;
         ctx.stroke();
 

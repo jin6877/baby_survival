@@ -9,6 +9,15 @@ export default class HUD {
     }
 
     handleClick(mx, my) {
+        // 메인 버튼 클릭
+        const mb = this._menuBtnRect;
+        if (mb && mx >= mb.x && mx <= mb.x + mb.w && my >= mb.y && my <= mb.y + mb.h) {
+            if (confirm('메인으로 돌아가시겠습니까?\n진행 중인 스테이지는 저장되지 않습니다.')) {
+                window.location.href = '/';
+            }
+            return true;
+        }
+
         if (this.tooltip) {
             this.tooltip = null;
             this.game.paused = false;
@@ -64,7 +73,25 @@ export default class HUD {
         this.renderWeaponSlots(ctx, H);
         this.renderEquipmentSlots(ctx, W, H);
         this.renderBossHP(ctx, W);
+        this.renderMenuButton(ctx, W);
         this.renderItemDetail(ctx, W, H);
+    }
+
+    renderMenuButton(ctx, W) {
+        const bw = 60, bh = 26;
+        const bx = W - bw - 8, by = 8;
+        this._menuBtnRect = { x: bx, y: by, w: bw, h: bh };
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.fillStyle = '#ccc';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('메인', bx + bw / 2, by + bh / 2);
     }
 
     renderHPBar(ctx) {
@@ -103,7 +130,8 @@ export default class HUD {
         ctx.font = 'bold 15px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${stageName} (Lv.${player.growthLevel})`, x + w / 2, y + h / 2);
+        const babyName = this.game.babyName || '아기';
+        ctx.fillText(`${babyName} - ${stageName} (Lv.${player.growthLevel})`, x + w / 2, y + h / 2);
     }
 
     renderEXPBar(ctx) {
@@ -126,132 +154,115 @@ export default class HUD {
     }
 
     // HP바 아래: 스탯 표시 (바닥 드롭 숫자 + 장비 보너스 (+X))
+    _fmtVal(v) {
+        if (v === 0) return '0';
+        return Number.isInteger(v) ? '' + v : v.toFixed(1);
+    }
+
+    _drawStatSection(ctx, panelX, startY, panelW, title, titleColor, stats) {
+        if (stats.length === 0) return startY;
+
+        const rowH = 18;
+        const headerH = 20;
+        const panelH = stats.length * rowH + headerH + 4;
+        const endX = panelX + panelW - 8;
+
+        // 반투명 배경
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctx.fillRect(panelX, startY, panelW, panelH);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(panelX, startY, panelW, panelH);
+
+        // 섹션 제목
+        ctx.fillStyle = titleColor;
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(title, panelX + 8, startY + headerH / 2);
+
+        for (let i = 0; i < stats.length; i++) {
+            const s = stats[i];
+            const y = startY + headerH + i * rowH + rowH / 2;
+
+            // 색상 점
+            ctx.fillStyle = s.color;
+            ctx.fillRect(panelX + 6, y - 3, 4, 6);
+
+            // 이름
+            ctx.fillStyle = '#ccc';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(s.label, panelX + 16, y);
+
+            // 오른쪽: 기본 (+증가) (x아이템%)
+            ctx.textAlign = 'right';
+            let cx = endX;
+
+            // 아이템% (연두)
+            if (s.equipPct > 0) {
+                const t = `(x${Math.round(s.equipPct * 100)}%)`;
+                ctx.fillStyle = '#69f0ae';
+                ctx.font = 'bold 10px monospace';
+                ctx.fillText(t, cx, y);
+                cx -= ctx.measureText(t).width + 2;
+            }
+
+            // 증가 (노랑)
+            if (s.grow > 0) {
+                const t = `(+${this._fmtVal(s.grow)})`;
+                ctx.fillStyle = '#ffd740';
+                ctx.font = 'bold 10px monospace';
+                ctx.fillText(t, cx, y);
+                cx -= ctx.measureText(t).width + 2;
+            }
+
+            // 기본 (흰색)
+            const t = `${this._fmtVal(s.base)}`;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText(t, cx, y);
+        }
+
+        return startY + panelH + 4;
+    }
+
     renderDropStats(ctx) {
         const player = this.game.player;
         if (!player || !player.dropStats) return;
 
+        const bs = player.baseStats || { hp: 80, attack: 5, speed: 1.5, defense: 0 };
         const ds = player.dropStats;
-        const eq = this.getEquipmentBonuses(player);
-
-        // 스탯 목록: { label, dropVal, dropUnit, equipVal, equipUnit, color }
-        const allStats = [
-            { label: '공격력', dropVal: ds.attack, equipVal: eq.attack, color: '#ff5252' },
-            { label: '이동속도', dropVal: ds.speed, equipVal: eq.speed, color: '#69f0ae' },
-            { label: '공격속도', dropVal: ds.attackSpeed, equipVal: eq.attackSpeed, color: '#ffab40' },
-            { label: '체력', dropVal: ds.maxHp, equipVal: eq.maxHp, color: '#ef5350' },
-            { label: '투사체', dropVal: ds.projSize, equipVal: eq.projSize, color: '#7c4dff' },
-            { label: '피해감소', dropVal: 0, equipVal: eq.damageReduction, color: '#78909c' },
-            { label: '경험치', dropVal: 0, equipVal: eq.exp, color: '#66bb6a' },
-            { label: '재생', dropVal: 0, equipVal: eq.regen, color: '#e91e63' },
-            { label: '흡수범위', dropVal: 0, equipVal: eq.pickupRadius, color: '#ff5252' },
-        ];
-
-        // 값이 있는 것만 필터
-        const stats = allStats.filter(s => s.dropVal > 0 || s.equipVal > 0);
-        if (stats.length === 0) return;
+        const ss = player.stageStats || { speed: 0, attackSpeed: 0, defense: 0 };
+        const bf = player.buffStacks || {};
 
         const panelX = 10;
-        const panelY = 118;
-        const rowH = 20;
         const panelW = 260;
-        const panelH = stats.length * rowH + 8;
+        let curY = 118;
 
-        // 반투명 배경 패널
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-        ctx.fillRect(panelX, panelY, panelW, panelH);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(panelX, panelY, panelW, panelH);
+        // === 영구 스탯 (공격력, 체력) ===
+        const permStats = [
+            { label: '공격력', base: bs.attack, grow: ds.attack + (bf.attack || 0), equipPct: player.attackPowerPct || 0, color: '#ff5252' },
+            { label: '체력', base: bs.hp, grow: ds.maxHp + (bf.maxHp || 0) * 5, equipPct: 0, color: '#ef5350' },
+        ];
+        curY = this._drawStatSection(ctx, panelX, curY, panelW, '[ 영구 스탯 ]', '#ffd740', permStats);
 
-        ctx.textBaseline = 'middle';
-
-        for (let i = 0; i < stats.length; i++) {
-            const s = stats[i];
-            const y = panelY + 4 + i * rowH + rowH / 2;
-
-            // 왼쪽 색상 점
-            ctx.fillStyle = s.color;
-            ctx.fillRect(panelX + 6, y - 4, 4, 8);
-
-            // 스탯 이름
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 13px monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText(s.label, panelX + 16, y);
-
-            // 바닥 드롭 수치 (+ 없이, 절대 수치)
-            let valueText = '';
-            if (s.dropVal > 0) {
-                const dv = Number.isInteger(s.dropVal) ? s.dropVal : +s.dropVal.toFixed(1);
-                valueText = `${dv}`;
-            }
-
-            // 장비 보너스 (+X)
-            let equipText = '';
-            if (s.equipVal > 0) {
-                const val = Number.isInteger(s.equipVal) ? s.equipVal : s.equipVal.toFixed(1);
-                equipText = `(+${val})`;
-            }
-
-            ctx.textAlign = 'right';
-            const endX = panelX + panelW - 8;
-
-            if (valueText && equipText) {
-                // 드롭 수치 + 장비 보너스 모두 표시
-                const equipWidth = ctx.measureText(equipText).width;
-                // 장비 보너스 (연두색)
-                ctx.fillStyle = '#69f0ae';
-                ctx.font = 'bold 12px monospace';
-                ctx.fillText(equipText, endX, y);
-                // 드롭 수치 (흰색)
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 14px monospace';
-                ctx.fillText(valueText + ' ', endX - equipWidth - 2, y);
-            } else if (valueText) {
-                // 드롭 수치만
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 14px monospace';
-                ctx.fillText(valueText, endX, y);
-            } else if (equipText) {
-                // 장비 보너스만
-                ctx.fillStyle = '#69f0ae';
-                ctx.font = 'bold 13px monospace';
-                ctx.fillText(equipText, endX, y);
-            }
-        }
+        // === 스테이지 스탯 (초기화됨) ===
+        const stageAll = [
+            { label: '이동속도', base: bs.speed, grow: ss.speed + (bf.speed || 0) * 0.02, equipPct: player.speedMultiplier - 1 - ss.speed - (bf.speed || 0) * 0.02 > 0.001 ? player.speedMultiplier - 1 - ss.speed - (bf.speed || 0) * 0.02 : 0, color: '#69f0ae' },
+            { label: '공격속도', base: 1, grow: ss.attackSpeed + (bf.attackSpeed || 0) * 0.02, equipPct: player.attackSpeedMultiplier - 1 - ss.attackSpeed - (bf.attackSpeed || 0) * 0.02 > 0.001 ? player.attackSpeedMultiplier - 1 - ss.attackSpeed - (bf.attackSpeed || 0) * 0.02 : 0, color: '#ffab40' },
+            { label: '방어력', base: bs.defense, grow: ss.defense + (bf.damageReduction || 0), equipPct: player.damageReductionPct || 0, color: '#78909c' },
+            { label: '투사체', base: 1, grow: (bf.projSize || 0) * 0.03, equipPct: player.projectileSizeMultiplier - 1 - (bf.projSize || 0) * 0.03 > 0.001 ? player.projectileSizeMultiplier - 1 - (bf.projSize || 0) * 0.03 : 0, color: '#7c4dff' },
+            { label: '재생', base: 0, grow: (bf.hpRegen || 0) * 0.3, equipPct: 0, color: '#e91e63' },
+        ];
+        const stageStats = stageAll.filter(s => s.base > 0 || s.grow > 0.001 || s.equipPct > 0.001);
+        curY = this._drawStatSection(ctx, panelX, curY, panelW, '[ 스테이지 스탯 ]', '#80cbc4', stageStats);
     }
 
-    // 장비에서 제공하는 보너스 합산
+    // 장비에서 제공하는 보너스 합산 (모두 퍼센트)
     getEquipmentBonuses(player) {
-        const bonuses = {
-            attack: 0, speed: 0, attackSpeed: 0,
-            maxHp: 0, projSize: 0, damageReduction: 0,
-            exp: 0, regen: 0, pickupRadius: 0,
-        };
-        if (!player.equipment) return bonuses;
-
-        for (const eq of player.equipment) {
-            const name = eq.name;
-            if (name === '아빠 응원' && eq.attackBonus) {
-                bonuses.attack += Math.round(eq.attackBonus * 100);
-            } else if (name === '아기 신발' && eq.speedBonus) {
-                bonuses.speed += Math.round(eq.speedBonus * 100);
-            } else if (name === '낮잠 시계' && eq.speedBonus) {
-                bonuses.attackSpeed += Math.round(eq.speedBonus * 100);
-            } else if (name === '아기 헬멧' && eq.reduction) {
-                bonuses.damageReduction += Math.round(eq.reduction * 100);
-            } else if (name === '두꺼운 안경' && eq.sizeBonus) {
-                bonuses.projSize += Math.round(eq.sizeBonus * 100);
-            } else if (name === '젖병 목걸이') {
-                if (eq.hpBonus) bonuses.maxHp += eq.hpBonus;
-                if (eq.regenBonus) bonuses.regen += eq.regenBonus;
-            } else if (name === '행운의 곰돌이' && eq.expBonus) {
-                bonuses.exp += Math.round(eq.expBonus * 100);
-            } else if (name === '엄마 손수건' && eq.radiusBonus) {
-                bonuses.pickupRadius += eq.radiusBonus;
-            }
-        }
-        return bonuses;
+        // 이제 장비 보너스는 player 속성에 직접 반영되므로 별도 합산 불필요
+        return {};
     }
 
     renderStageAndTimer(ctx, W) {
